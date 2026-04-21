@@ -10,7 +10,7 @@ const VAPID_PUBLIC_KEY = 'BMTFc2XyM070WuZG2Ewjlsj4kMehvOy9qTFYw45EQw0SEw_uohKIpd
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE_NAME).then(c =>
-      c.addAll(['./user.html', './manifest.json']).catch(() => {})
+      c.addAll(['./index.html', './manifest.json']).catch(() => {})
     )
   );
   self.skipWaiting();
