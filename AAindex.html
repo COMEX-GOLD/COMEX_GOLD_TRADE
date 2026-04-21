@@ -1,0 +1,2418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0b0b0f">
+<title>COMEX GOLD TRADE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    .admin-msg { 
+        background: #e9e9eb; 
+        padding: 8px 15px; 
+        margin: 5px; 
+        border-radius: 15px; 
+        max-width: 80%;
+        float: left; 
+        clear: both; 
+        color: #000; 
+    }
+    .user-msg { 
+        background: #fbc02d; 
+        padding: 8px 15px; 
+        margin: 5px; 
+        border-radius: 15px; 
+        max-width: 80%;
+        float: right; 
+        clear: both; 
+        color: #000; 
+    }
+    #chat-container { 
+        display: flex; 
+        flex-direction: column; 
+        padding: 10px; 
+        overflow-y: auto; 
+        height: 400px; 
+        background: #fff;
+    }
+</style>
+
+<!-- Firebase v10 compat -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<!-- TradingView -->
+<script src="https://s3.tradingview.com/tv.js"></script>
+<style>
+:root{
+  --bg:#0b0b0f;--card:#13131a;--card2:#1c1c26;
+  --gold:#d4af37;--gold2:#f0c040;
+  --nav-bg:rgba(10,10,16,0.97);
+  --inactive:rgba(255,255,255,0.22);
+  --text:#fff;--text2:rgba(255,255,255,0.72);
+  --subtext:rgba(255,255,255,0.33);
+  --border:rgba(255,255,255,0.06);
+  --up:#2ecc71;--dn:#ff4757;--blue:#3498db;
+  --nav-h:78px;
+}
+body.light{
+  --bg:#f0f0f6;--card:#fff;--card2:#e6e6f0;
+  --nav-bg:rgba(242,242,249,0.97);
+  --inactive:rgba(0,0,0,0.28);
+  --text:#0d0d14;--text2:rgba(0,0,0,0.68);
+  --subtext:rgba(0,0,0,0.36);
+  --border:rgba(0,0,0,0.07);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);transition:background .4s,color .4s;}
+
+/* PHONE */
+.phone{width:100%;max-width:390px;height:100dvh;margin:0 auto;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);transition:background .4s;}
+
+/* ===== AUTH ===== */
+#authScreen{
+  position:fixed;inset:0;z-index:9999;background:var(--bg);
+  display:flex;align-items:center;justify-content:center;padding:16px;
+  transition:background .4s;
+}
+.auth-inner{width:100%;max-width:360px;}
+.auth-logo{text-align:center;margin-bottom:22px;}
+.auth-logo img{width:52px;height:52px;object-fit:contain;filter:drop-shadow(0 4px 16px rgba(212,175,55,.5));}
+.auth-logo h1{font-family:'Cinzel',serif;font-size:19px;font-weight:900;color:var(--gold2);letter-spacing:.1em;margin-top:10px;}
+.auth-logo p{font-size:10px;color:var(--subtext);letter-spacing:.12em;text-transform:uppercase;margin-top:3px;}
+.auth-tabs{display:flex;gap:4px;background:rgba(255,255,255,.05);border-radius:14px;padding:4px;margin-bottom:18px;}
+body.light .auth-tabs{background:rgba(0,0,0,.06);}
+.auth-tab-btn{flex:1;padding:9px;text-align:center;border-radius:11px;font-size:13px;font-weight:600;color:var(--subtext);cursor:pointer;transition:all .3s;}
+.auth-tab-btn.active{background:var(--card);color:var(--gold2);box-shadow:0 2px 10px rgba(0,0,0,.25);}
+body.light .auth-tab-btn.active{background:#fff;}
+.glass-card{
+  background:rgba(255,255,255,.05);backdrop-filter:blur(24px);
+  -webkit-backdrop-filter:blur(24px);border:1px solid rgba(212,175,55,.2);
+  border-radius:24px;padding:22px 18px 18px;
+}
+body.light .glass-card{background:rgba(255,255,255,.88);border-color:rgba(212,175,55,.25);}
+.form-group{margin-bottom:12px;}
+.form-label{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--subtext);margin-bottom:6px;display:block;}
+.form-input{
+  width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+  border-radius:12px;padding:12px 14px;font-size:14px;font-weight:500;
+  color:var(--text);font-family:'DM Sans',sans-serif;
+  transition:border-color .3s,background .3s;-webkit-appearance:none;
+}
+body.light .form-input{background:rgba(0,0,0,.04);border-color:rgba(0,0,0,.12);}
+.form-input:focus{outline:none;border-color:var(--gold);background:rgba(212,175,55,.05);}
+.form-input::placeholder{color:var(--subtext);}
+.auth-bottom-row{display:flex;align-items:flex-end;justify-content:space-between;margin-top:18px;gap:14px;}
+.btn-primary{
+  padding:12px 22px;background:linear-gradient(135deg,var(--gold),var(--gold2));
+  color:#000;font-weight:700;font-size:14px;border-radius:12px;
+  cursor:pointer;border:none;font-family:'DM Sans',sans-serif;letter-spacing:.04em;
+  transition:opacity .2s,transform .15s;white-space:nowrap;
+}
+.btn-primary:active{opacity:.82;transform:scale(.97);}
+.login-hint{text-align:right;}
+.login-hint small{font-size:11px;color:var(--subtext);display:block;margin-bottom:4px;}
+.login-hint .lnk{font-size:13px;font-weight:700;color:var(--gold2);cursor:pointer;text-decoration:underline;text-underline-offset:3px;}
+.form-err{font-size:12px;color:#ff4757;min-height:18px;margin-top:5px;}
+.pending-box{
+  text-align:center;padding:16px;background:rgba(212,175,55,.08);
+  border:1px solid rgba(212,175,55,.2);border-radius:14px;margin-top:12px;display:none;
+}
+.pending-box p{font-size:13px;color:var(--gold2);font-weight:600;}
+.pending-box small{font-size:11px;color:var(--subtext);display:block;margin-top:4px;}
+
+/* ===== STATUS BAR ===== */
+.status-bar{
+  height:44px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 18px;flex-shrink:0;background:var(--bg);transition:background .4s;
+}
+.st-time{font-size:14px;font-weight:700;color:var(--text);}
+.st-r{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);}
+
+/* TICKER */
+.ticker-wrap{
+  width:100%;overflow:hidden;
+  background:rgba(212,175,55,.055);
+  border-top:1px solid rgba(212,175,55,.1);
+  border-bottom:1px solid rgba(212,175,55,.1);
+  padding:5px 0;flex-shrink:0;
+}
+.ticker-track{
+  display:inline-flex;gap:36px;white-space:nowrap;
+  animation:ticker 28s linear infinite;
+}
+@keyframes ticker{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+.ti{font-size:11px;font-weight:600;color:var(--gold2);display:inline-flex;align-items:center;gap:5px;}
+.ti .up{color:var(--up);}.ti .dn{color:var(--dn);}
+
+/* SCREEN */
+.screen{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;}
+.screen::-webkit-scrollbar{display:none;}
+
+/* PAGES */
+.page{display:none;min-height:100%;padding-bottom:16px;animation:pgIn .38s cubic-bezier(.22,1,.36,1);}
+.page.active{display:block;}
+@keyframes pgIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+/* ===== SHARED ===== */
+.sec-hdr{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--subtext);margin:16px 16px 9px;}
+.card-base{background:var(--card);border:1px solid var(--border);border-radius:16px;transition:background .4s;}
+.hdr-actions{display:flex;align-items:center;gap:8px;}
+.hdr-btn{
+  width:36px;height:36px;border-radius:11px;background:var(--card);
+  border:1px solid var(--border);display:flex;align-items:center;justify-content:center;
+  cursor:pointer;position:relative;transition:background .3s;
+}
+.hdr-btn img{width:20px;height:20px;object-fit:contain;}
+.badge-dot{
+  position:absolute;top:6px;right:6px;width:7px;height:7px;
+  background:#ff4757;border-radius:50%;border:1.5px solid var(--card);
+  animation:pulse 2s infinite;
+}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,71,87,.5);}50%{box-shadow:0 0 0 4px rgba(255,71,87,0);}}
+
+/* ===== HOME PAGE ===== */
+.home-hdr{padding:12px 16px 0;display:flex;align-items:center;justify-content:space-between;}
+.home-logo{display:flex;align-items:center;gap:8px;}
+.home-logo img{width:30px;height:30px;object-fit:contain;}
+.logo-text{font-family:'Cinzel',serif;font-size:12px;font-weight:900;color:var(--gold2);letter-spacing:.08em;line-height:1.15;}
+.logo-sub{font-size:8.5px;color:var(--subtext);letter-spacing:.1em;text-transform:uppercase;}
+
+/* Price strip */
+.price-strip{
+  margin:12px 16px 0;
+  background:linear-gradient(135deg,#1c1507,#241e09,#1c1507);
+  border:1px solid rgba(212,175,55,.22);border-radius:18px;
+  padding:14px 14px 14px 16px;display:flex;align-items:center;
+  justify-content:space-between;position:relative;overflow:hidden;
+}
+.price-strip::before{
+  content:'';position:absolute;top:-24px;right:-12px;
+  width:110px;height:110px;
+  background:radial-gradient(circle,rgba(212,175,55,.12) 0%,transparent 70%);
+}
+.ps-label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:rgba(212,175,55,.65);font-weight:600;}
+.ps-price{font-size:30px;font-weight:700;color:var(--gold2);letter-spacing:-.5px;margin:3px 0;}
+.ps-curr{font-size:14px;font-weight:500;color:rgba(212,175,55,.65);}
+.ps-chg{font-size:12px;color:var(--up);font-weight:600;}
+.ps-ico{width:58px;height:58px;object-fit:contain;filter:drop-shadow(0 3px 10px rgba(212,175,55,.4));flex-shrink:0;}
+
+/* TradingView */
+  .tv-wrap {
+    margin: 20px 0 0;        /* ဘေး margin ကို 0 ပေးလိုက်ပါ (ဘေးအပြည့်ပေါ်ရန်) */
+    border-radius: 16px; 
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: #131722;
+   height: 600px !important;  /* 900 အစား 600 လို့ အရင်စမ်းပါ၊ !important သေချာထည့်ပါ */
+min-height: 600px !important;
+
+    position: relative;
+    width: 100%;             /* width: 100% ကိုလည်း သေချာထည့်ပေးပါ */
+}
+.tv-loading{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:10px;background:#131722;
+}
+.spinner{width:30px;height:30px;border-radius:50%;border:3px solid rgba(212,175,55,.15);border-top-color:var(--gold2);animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.tv-loading p{font-size:12px;color:rgba(212,175,55,.6);}
+
+/* Social feed */
+.feed-warning{
+  background:rgba(255,71,87,.08);border:1px solid rgba(255,71,87,.22);
+  border-radius:12px;padding:9px 12px;margin:0 16px 10px;
+  font-size:11px;color:#ff6b78;font-weight:500;line-height:1.5;
+}
+.feed-outer{
+  height:380px;overflow:hidden;position:relative;margin:0 16px;
+}
+.feed-outer::before,.feed-outer::after{
+  content:'';position:absolute;left:0;right:0;height:40px;z-index:5;pointer-events:none;
+}
+.feed-outer::before{top:0;background:linear-gradient(to bottom,var(--bg),transparent);}
+.feed-outer::after{bottom:0;background:linear-gradient(to top,var(--bg),transparent);}
+body.light .feed-outer::before{background:linear-gradient(to bottom,var(--bg),transparent);}
+body.light .feed-outer::after{background:linear-gradient(to top,var(--bg),transparent);}
+.feed-track{
+  display:flex;flex-direction:column;gap:8px;
+  animation:feedScroll 50s linear infinite;
+}
+.feed-track:hover{animation-play-state:paused;}
+@keyframes feedScroll{0%{transform:translateY(0);}100%{transform:translateY(-50%);}}
+.feed-post{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;padding:12px;flex-shrink:0;transition:background .3s;
+}
+.fp-hdr{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.fp-av{
+  width:32px;height:32px;border-radius:50%;
+  background:linear-gradient(135deg,#2a2418,#1a160a);
+  border:1.5px solid rgba(212,175,55,.2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;color:var(--gold2);flex-shrink:0;
+}
+.fp-name{font-size:12px;font-weight:600;color:var(--text);}
+.fp-flag{font-size:13px;}
+.fp-time{font-size:10px;color:var(--subtext);}
+.fp-body{font-size:12px;color:var(--text2);line-height:1.55;margin-bottom:8px;}
+.fp-actions{display:flex;gap:14px;}
+.fp-act{
+  display:flex;align-items:center;gap:4px;
+  font-size:11px;color:var(--subtext);cursor:pointer;transition:color .2s;
+}
+.fp-act svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.fp-act:hover{color:var(--gold2);}
+.fp-act.liked{color:#ff4757;}
+.fp-act.liked svg{fill:#ff4757;stroke:#ff4757;}
+
+/* Gold shops */
+.shop-tabs-row{display:flex;gap:6px;overflow-x:auto;padding:0 16px 6px;margin-top:16px;}
+.shop-tabs-row::-webkit-scrollbar{display:none;}
+.shop-tab-btn{
+  flex-shrink:0;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:600;
+  background:var(--card);border:1px solid var(--border);color:var(--subtext);cursor:pointer;
+  white-space:nowrap;transition:all .25s;
+}
+.shop-tab-btn.active{background:rgba(212,175,55,.12);border-color:rgba(212,175,55,.35);color:var(--gold2);}
+.shop-card-wrap{margin:0 16px;}
+.shop-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px;display:none;}
+.shop-card.active{display:block;}
+.shop-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.shop-mm{font-size:11px;color:var(--subtext);margin-bottom:10px;}
+.shop-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+.shop-tag{font-size:10px;padding:3px 9px;border-radius:20px;background:rgba(212,175,55,.08);color:var(--gold2);border:1px solid rgba(212,175,55,.18);}
+.shop-link-btn{font-size:12px;color:var(--blue);font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:4px;}
+
+/* ===== TRADE PAGE ===== */
+.trade-hdr{padding:12px 16px 0;display:flex;align-items:center;justify-content:space-between;}
+.trade-title{font-size:18px;font-weight:700;color:var(--text);}
+.sym-badge{font-size:11px;font-weight:700;color:var(--gold);background:rgba(212,175,55,.1);padding:4px 10px;border-radius:20px;border:1px solid rgba(212,175,55,.25);}
+.mkt-tabs{display:flex;gap:4px;margin:10px 16px 0;background:var(--card2);border-radius:14px;padding:4px;}
+.mkt-tab{flex:1;text-align:center;padding:7px 4px;border-radius:11px;font-size:10.5px;font-weight:600;color:var(--subtext);cursor:pointer;transition:all .3s;}
+.mkt-tab.active{background:var(--card);color:var(--gold2);box-shadow:0 2px 8px rgba(0,0,0,.25);}
+body.light .mkt-tab.active{background:#fff;}
+
+/* timer grid */
+.timer-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:10px 16px 0;}
+.timer-opt{
+  background:var(--card);border:1.5px solid var(--border);border-radius:13px;
+  padding:10px 5px;text-align:center;cursor:pointer;transition:all .3s;
+}
+.timer-opt.sel{border-color:var(--gold);background:rgba(212,175,55,.08);}
+.to-sec{font-size:15px;font-weight:700;color:var(--text);}
+.to-pct{font-size:13px;font-weight:700;color:var(--up);margin:2px 0;}
+.to-range{font-size:9px;color:var(--subtext);}
+.timer-panel{
+  margin:10px 16px 0;background:var(--card);border:1px solid var(--border);
+  border-radius:16px;padding:14px;display:grid;grid-template-columns:1fr auto 1fr;
+  align-items:center;gap:10px;
+}
+.tp-lbl{font-size:10px;color:var(--subtext);text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px;}
+.tp-val{font-size:28px;font-weight:700;color:var(--gold2);font-variant-numeric:tabular-nums;}
+.tp-pct{font-size:22px;font-weight:700;color:var(--up);}
+.tp-sep{width:1px;height:40px;background:var(--border);}
+.tp-right{text-align:right;}
+.trade-btn-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 16px 0;}
+.btn-buy{padding:15px;border-radius:14px;text-align:center;font-size:15px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#1a6e3c,#2ecc71);color:#fff;letter-spacing:.04em;transition:opacity .2s,transform .15s;}
+.btn-sell{padding:15px;border-radius:14px;text-align:center;font-size:15px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#8b1a28,#ff4757);color:#fff;letter-spacing:.04em;transition:opacity .2s,transform .15s;}
+.btn-buy:active,.btn-sell:active{opacity:.8;transform:scale(.97);}
+
+/* ===== WALLET PAGE ===== */
+.wallet-hero{background:linear-gradient(160deg,#1c1507,#0f0f16);padding:18px 16px 22px;border-bottom:1px solid rgba(212,175,55,.1);}
+.wh-lbl{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:rgba(212,175,55,.65);font-weight:600;}
+.wh-bal{font-size:36px;font-weight:700;color:#fff;margin:4px 0 2px;letter-spacing:-.5px;}
+.wh-sub{font-size:12px;color:rgba(255,255,255,.3);}
+.bal-cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 16px 0;}
+.bal-card{background:var(--card);border-radius:14px;padding:12px 8px;text-align:center;border:1px solid var(--border);transition:background .4s;}
+.bc-unit{font-size:9.5px;font-weight:700;color:var(--subtext);letter-spacing:.08em;margin-bottom:4px;}
+.bc-val{font-size:14px;font-weight:700;color:var(--gold2);}
+.bc-val.fiat{color:var(--text);}
+.wallet-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 16px 0;}
+.wa-btn{background:var(--card);border-radius:14px;padding:12px 8px;text-align:center;border:1px solid var(--border);cursor:pointer;}
+.wa-ico{font-size:20px;margin-bottom:4px;}
+.wa-lbl{font-size:11px;color:var(--subtext);font-weight:500;}
+.tx-item{display:flex;align-items:center;justify-content:space-between;margin:0 16px 8px;padding:12px 14px;background:var(--card);border-radius:14px;border:1px solid var(--border);transition:background .4s;}
+.tx-l{display:flex;align-items:center;gap:10px;}
+.tx-ico{width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
+.tx-name{font-size:13px;font-weight:600;color:var(--text);}
+.tx-date{font-size:10px;color:var(--subtext);margin-top:1px;}
+.tx-amt{font-size:14px;font-weight:700;}
+.tx-amt.up{color:var(--up);}.tx-amt.dn{color:var(--dn);}
+
+/* ===== RECORD PAGE ===== */
+.rec-sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 16px 0;}
+.rs-card{background:var(--card);border-radius:14px;padding:12px 8px;text-align:center;border:1px solid var(--border);transition:background .4s;}
+.rs-lbl{font-size:10px;color:var(--subtext);font-weight:500;margin-bottom:3px;}
+.rs-val{font-size:16px;font-weight:700;color:var(--text);}
+.rs-val.up{color:var(--up);}.rs-val.dn{color:var(--dn);}
+.rec-item{display:flex;align-items:center;justify-content:space-between;margin:0 16px 8px;padding:12px 14px;background:var(--card);border-radius:14px;border:1px solid var(--border);transition:background .4s;}
+.ri-dir{display:inline-block;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;}
+.ri-dir.buy{background:rgba(46,204,113,.15);color:var(--up);}
+.ri-dir.sell{background:rgba(255,71,87,.12);color:var(--dn);}
+.ri-pair{font-size:13px;font-weight:700;color:var(--text);margin:2px 0;}
+.ri-date{font-size:10px;color:var(--subtext);}
+.ri-pnl{font-size:15px;font-weight:700;}
+.ri-pnl.up{color:var(--up);}.ri-pnl.dn{color:var(--dn);}
+.ri-lot{font-size:10px;color:var(--subtext);text-align:right;margin-top:1px;}
+
+/* ===== PROFILE PAGE ===== */
+.prof-hdr{padding:12px 16px 0;display:flex;align-items:center;justify-content:space-between;}
+.pan{display:flex;align-items:center;gap:8px;}
+.pan img{width:28px;height:28px;object-fit:contain;}
+.pan-text{font-family:'Cinzel',serif;font-size:11.5px;font-weight:900;color:var(--gold2);letter-spacing:.08em;}
+.pan-sub{font-size:8px;color:var(--subtext);letter-spacing:.1em;text-transform:uppercase;}
+.prof-hero{padding:20px 16px 16px;text-align:center;border-bottom:1px solid var(--border);}
+.ph-av-wrap{position:relative;display:inline-block;margin-bottom:10px;}
+.ph-av{width:84px;height:84px;border-radius:50%;object-fit:cover;border:3px solid var(--gold);}
+.ph-cam{
+  position:absolute;bottom:2px;right:2px;
+  width:24px;height:24px;border-radius:50%;
+  background:var(--gold2);border:2px solid var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:12px;
+}
+.ph-fl{position:absolute;bottom:2px;left:2px;}
+.ph-fl img{width:22px;height:22px;border-radius:50%;object-fit:cover;border:2px solid var(--bg);}
+.ph-name{font-size:20px;font-weight:700;color:var(--text);}
+.ph-uid{font-size:12px;color:var(--subtext);margin-top:2px;}
+.ph-level{display:inline-flex;align-items:center;gap:4px;margin-top:8px;padding:4px 12px;border-radius:20px;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.25);font-size:11px;font-weight:600;color:var(--gold2);}
+.pm-sec{margin:14px 16px 0;}
+.pm-sec-title{font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--subtext);margin-bottom:8px;}
+.pm-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--card);border-radius:13px;margin-bottom:7px;border:1px solid var(--border);cursor:pointer;transition:background .3s;}
+.pm-l{display:flex;align-items:center;gap:11px;}
+.pm-ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;}
+.pm-ico img{width:22px;height:22px;object-fit:contain;}
+.pm-name{font-size:13px;font-weight:500;color:var(--text);}
+.pm-sub{font-size:11px;color:var(--subtext);margin-top:1px;}
+.pm-arr{color:var(--subtext);font-size:16px;}
+.pm-toggle{width:46px;height:26px;border-radius:13px;background:#333;position:relative;cursor:pointer;transition:background .4s;border:1px solid rgba(255,255,255,.08);}
+.pm-toggle.on{background:var(--gold2);}
+.pm-thumb{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .35s cubic-bezier(.34,1.56,.64,1);box-shadow:0 2px 4px rgba(0,0,0,.3);}
+.pm-toggle.on .pm-thumb{left:23px;}
+.about-box{margin:14px 16px;background:var(--card);border-radius:16px;padding:16px;border:1px solid var(--border);}
+.about-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.about-title{font-family:'Cinzel',serif;font-size:14px;font-weight:900;color:var(--gold2);}
+.about-sub{font-size:9px;color:var(--subtext);letter-spacing:.1em;text-transform:uppercase;}
+.about-p{font-size:12px;color:var(--text2);line-height:1.65;margin-bottom:10px;}
+.about-contact{background:var(--card2);border-radius:12px;padding:12px;font-size:12px;color:var(--text2);line-height:1.8;}
+.about-contact b{color:var(--text);display:block;}
+
+/* ===== BOTTOM NAV ===== */
+.bottom-nav{
+  height:var(--nav-h);background:var(--nav-bg);
+  border-top:1px solid rgba(212,175,55,.1);
+  display:flex;align-items:center;padding:0 2px 8px;flex-shrink:0;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);transition:background .4s;
+}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;padding:4px 2px;user-select:none;}
+.nav-iw{
+  width:46px;height:40px;position:relative;display:flex;align-items:center;justify-content:center;
+  border-radius:13px;overflow:hidden;transition:transform .5s cubic-bezier(.34,1.56,.64,1),background .35s;
+}
+.nav-item.active .nav-iw{transform:scale(1.07) translateY(-2px);background:rgba(212,175,55,.11);}
+.nav-iw img{width:25px;height:25px;object-fit:contain;position:relative;z-index:1;transition:filter .4s,opacity .4s;opacity:.32;filter:grayscale(1) brightness(.65);}
+.nav-item.active .nav-iw img{opacity:1;filter:grayscale(0) brightness(1.1) drop-shadow(0 2px 8px rgba(212,175,55,.45));}
+.shimmer{position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(105deg,transparent 0%,rgba(255,255,255,.05) 25%,rgba(255,255,230,.68) 50%,rgba(255,255,255,.05) 75%,transparent 100%);z-index:2;pointer-events:none;border-radius:13px;}
+.nav-item.active .shimmer{animation:shimmerSweep .65s cubic-bezier(.25,.46,.45,.94) forwards;}
+@keyframes shimmerSweep{0%{left:-80%;opacity:1;}100%{left:150%;opacity:.1;}}
+.nav-label{font-size:9px;font-weight:600;letter-spacing:.02em;color:var(--inactive);transition:color .3s;white-space:nowrap;}
+.nav-item.active .nav-label{color:var(--gold2);}
+
+/* ===== MODALS ===== */
+.overlay{display:none;position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);align-items:flex-end;justify-content:center;}
+.sheet{width:100%;max-width:390px;background:var(--card);border-radius:28px 28px 0 0;border:1px solid var(--border);border-bottom:none;padding:0 0 28px;animation:slideUp .35s cubic-bezier(.22,1,.36,1);transition:background .4s;}
+@keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.sheet-hdr{padding:14px 18px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.sheet-title{font-size:15px;font-weight:700;color:var(--text);}
+.sheet-close{font-size:22px;color:var(--subtext);cursor:pointer;padding:2px 4px;}
+
+/* Language items */
+.lang-item{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .2s;}
+.lang-item:last-child{border-bottom:none;}
+.lang-item:active{background:rgba(212,175,55,.05);}
+.lang-l{display:flex;align-items:center;gap:12px;}
+.lang-flag{font-size:26px;line-height:1;}
+.lang-n{font-size:14px;font-weight:600;color:var(--text);}
+.lang-en{font-size:11px;color:var(--subtext);margin-top:1px;}
+.lang-chk{color:var(--gold2);font-size:18px;font-weight:700;visibility:hidden;}
+.lang-chk.show{visibility:visible;}
+
+/* CS Chat */
+.chat-sheet{width:100%;max-width:390px;background:var(--card);border-radius:28px 28px 0 0;border:1px solid var(--border);border-bottom:none;display:flex;flex-direction:column;max-height:68vh;animation:slideUp .35s cubic-bezier(.22,1,.36,1);transition:background .4s;}
+.chat-sheet::-webkit-scrollbar{display:none;}
+.chat-hdr{padding:14px 18px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.cs-wrap{display:flex;align-items:center;gap:10px;}
+.cs-av-w{position:relative;}
+.cs-av{width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);}
+.cs-dot{position:absolute;bottom:1px;right:1px;width:10px;height:10px;background:var(--up);border-radius:50%;border:2px solid var(--card);}
+.cs-name{font-size:14px;font-weight:600;color:var(--text);}
+.cs-status{font-size:11px;color:var(--up);}
+.chat-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;min-height:180px;}
+.chat-msgs::-webkit-scrollbar{display:none;}
+.msg-row{display:flex;gap:8px;}
+.msg-av{width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0;}
+.msg-bub{background:var(--card2);border:1px solid var(--border);border-radius:4px 14px 14px 14px;padding:9px 12px;max-width:80%;transition:background .4s;}
+.msg-bub p{font-size:12.5px;color:var(--text);line-height:1.5;}
+.msg-t{font-size:10px;color:var(--subtext);margin-top:3px;}
+.chat-input-row{padding:10px 14px;display:flex;gap:10px;align-items:center;border-top:1px solid var(--border);}
+.chat-inp{flex:1;background:var(--card2);border-radius:22px;padding:10px 14px;font-size:13px;color:var(--subtext);border:1px solid var(--border);}
+.chat-send{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;cursor:pointer;color:#000;font-size:15px;flex-shrink:0;}
+
+/* Notif */
+.notif-overlay{display:none;position:fixed;inset:0;z-index:820;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);align-items:flex-start;justify-content:center;padding-top:70px;}
+.notif-sheet{width:calc(100% - 32px);max-width:360px;background:var(--card);border-radius:20px;border:1px solid var(--border);padding:0 0 14px;animation:fadeD .3s ease;max-height:55vh;overflow-y:auto;transition:background .4s;}
+.notif-sheet::-webkit-scrollbar{display:none;}
+@keyframes fadeD{from{opacity:0;transform:translateY(-10px);}to{opacity:1;transform:translateY(0);}}
+.notif-hdr{padding:14px 16px 12px;border-bottom:1px solid var(--border);font-size:15px;font-weight:700;color:var(--text);}
+.ni{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:10px;}
+.ni:last-child{border-bottom:none;}
+.ni-dot{width:7px;height:7px;background:var(--gold2);border-radius:50%;flex-shrink:0;margin-top:5px;}
+.ni-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;}
+.ni-body{font-size:12px;color:var(--subtext);line-height:1.4;}
+.ni-time{font-size:10px;color:var(--subtext);margin-top:3px;}
+
+/* page topbar */
+.page-topbar{padding:12px 16px 0;display:flex;align-items:center;justify-content:space-between;}
+.topbar-title{font-size:20px;font-weight:700;color:var(--text);}
+input[type=file]{display:none;}
+</style>
+</head>
+<body>
+
+<!-- ===== AUTH SCREEN ===== -->
+<div id="authScreen">
+  <div class="auth-inner">
+    <div class="auth-logo">
+      <img id="authLogo" src="" alt="COMEX">
+      <h1>COMEX GOLD TRADE</h1>
+      <p>Myanmar's Premium Gold Trading Platform</p>
+    </div>
+
+    <!-- SIGN IN WAITING MESSAGE (shown when Sign In tab clicked) -->
+    <div id="loginForm" style="display:none">
+      <div style="text-align:center;padding:28px 20px;background:rgba(212,175,55,.07);border:1px solid rgba(212,175,55,.22);border-radius:20px;backdrop-filter:blur(16px);">
+        <div style="font-size:40px;margin-bottom:14px">⏳</div>
+        <div style="font-size:15px;font-weight:700;color:var(--gold2);margin-bottom:12px;line-height:1.5">
+          စစ်ဆေးနေဆဲဖြစ်ပါသည်
+        </div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.8;margin-bottom:16px">
+          COMEX GOLD TRADE Admin Team မှ အသုံးပြုသူရဲ့ အချက်အလက်အားစစ်ဆေး အတည်ပြုပေးနေပါသဖြင့် ခေတ္တခဏ စောင့်ဆိုင်းပေးပါရန် မေတ္တာရပ်ခံပါကြောင်း အသိပေးပါတယ်ခင်ဗျ။
+        </div>
+        <div style="font-size:11px;color:var(--subtext);padding:10px;background:rgba(255,255,255,.04);border-radius:10px;line-height:1.7">
+          📞 လိုအပ်ပါက Admin ထံ ဆက်သွယ်နိုင်ပါသည်
+        </div>
+      </div>
+    </div>
+
+    <!-- REGISTER FORM (shown by default / Create Account tab) -->
+    <div id="registerForm" class="glass-card">
+      <div class="form-group">
+        <label class="form-label">Real Full Name</label>
+        <input class="form-input" type="text" id="regName" placeholder="နာမည်အပြည့်အစုံ">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <input class="form-input" type="text" id="regUser" placeholder="username">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone or Gmail</label>
+        <input class="form-input" type="text" id="regContact" placeholder="+95 9... or email@gmail.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Create Password</label>
+        <input class="form-input" type="password" id="regPass" placeholder="Min. 8 characters">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Confirm Password</label>
+        <input class="form-input" type="password" id="regConf" placeholder="Repeat password">
+      </div>
+      <div class="form-err" id="regErr"></div>
+      <div class="auth-bottom-row">
+        <button class="btn-primary" onclick="doRegister()">Sign Up</button>
+        <div class="login-hint">
+          <small>Already have account?</small>
+          <span class="lnk" onclick="showAuthTab('login')">Sign In</span>
+        </div>
+      </div>
+      <div class="pending-box" id="pendingBox">
+        <p>⏳ Account Pending Approval</p>
+        <small>Our admin will review and activate your account soon.</small>
+      </div>
+    </div>
+
+    <!-- TABS AT BOTTOM -->
+    <div class="auth-tabs" style="margin-top:16px;margin-bottom:0">
+      <div class="auth-tab-btn" id="tabSignIn" onclick="showAuthTab('login')">Sign In</div>
+      <div class="auth-tab-btn active" id="tabRegister" onclick="showAuthTab('register')">Create Account</div>
+    </div>
+
+    <div id="loginErr" style="display:none"></div>
+    <!-- Hidden login fields (kept for JS compatibility) -->
+    <input type="hidden" id="loginEmail">
+    <input type="hidden" id="loginPass">
+  </div>
+</div>
+
+<!-- ===== MAIN APP ===== -->
+<div class="phone" id="mainApp" style="display:none">
+
+  <!-- STATUS BAR -->
+  <div class="status-bar" style="display: none;">
+    <span class="st-time" id="stTime">9:41</span>
+    <div class="st-r">
+      <span>●●●</span><span> WiFi </span><span>🔋</span>
+    </div>
+  </div>
+
+  <!-- TICKER -->
+  <div class="ticker-wrap">
+    <div class="ticker-track">
+      <span class="ti">XAU/USD <span class="up">$3,298.50 ▲+0.38%</span></span>
+      <span class="ti">XAG/USD <span class="dn">$32.14 ▼-0.12%</span></span>
+      <span class="ti">BTC/USD <span class="up">$91,240 ▲+2.1%</span></span>
+      <span class="ti">WTI OIL <span class="up">$78.50 ▲+1.8%</span></span>
+      <span class="ti">MCM Gold <span class="up">5,620,000 K ▲+1.2%</span></span>
+      <span class="ti">S&amp;P 500 <span class="up">5,218 ▲+0.5%</span></span>
+      <span class="ti">XAU/USD <span class="up">$3,298.50 ▲+0.38%</span></span>
+      <span class="ti">XAG/USD <span class="dn">$32.14 ▼-0.12%</span></span>
+      <span class="ti">BTC/USD <span class="up">$91,240 ▲+2.1%</span></span>
+      <span class="ti">WTI OIL <span class="up">$78.50 ▲+1.8%</span></span>
+      <span class="ti">MCM Gold <span class="up">5,620,000 K ▲+1.2%</span></span>
+      <span class="ti">S&amp;P 500 <span class="up">5,218 ▲+0.5%</span></span>
+    </div>
+  </div>
+
+  <!-- SCREEN -->
+  <div class="screen">
+
+    <!-- ===================== HOME ===================== -->
+    <div class="page active" id="page-home">
+      <div class="home-hdr">
+        <div class="home-logo">
+          <img id="homeLogo" src="" alt="COMEX">
+          <div>
+            <div class="logo-text">COMEX GOLD TRADE</div>
+            <div class="logo-sub">Gold • Crypto • Oil • Stock</div>
+          </div>
+        </div>
+        <div class="hdr-actions">
+          <div class="hdr-btn" onclick="openNotif()">
+            <span style="font-size:18px">🔔</span>
+            <div class="badge-dot"></div>
+          </div>
+          <div class="hdr-btn" onclick="openLang()">
+            <img id="homeWorldIco" src="" alt="Lang">
+          </div>
+        </div>
+      </div>
+
+      <!-- Price strip -->
+      <div class="price-strip">
+        <div>
+          <div class="ps-label">XAU / USD Live</div>
+          <div class="ps-price"><span class="ps-curr">$</span>3,298.50</div>
+          <div class="ps-chg">▲ +12.40 (+0.38%) Today</div>
+        </div>
+        <img class="ps-ico" id="goldIco1" src="" alt="Gold">
+      </div>
+
+      <!-- TradingView Chart -->
+      <div class="tv-wrap" id="tv-home-wrap">
+        <div class="tv-loading" id="tv-home-loading">
+          <div class="spinner"></div>
+          <p>Loading Chart...</p>
+        </div>
+        <div id="tv_home"></div>
+      </div>
+
+      <!-- Social Feed -->
+      <div class="sec-hdr" style="margin-top:18px">📊 Market Discussion</div>
+      <div class="feed-warning">
+        <b>⚠️ Warning:</b> Users sharing false or misleading market information will be <b style="color:#ff4757">permanently banned</b> from this platform.
+      </div>
+      <div id="feedOuter" class="feed-outer">
+        <div class="feed-track" id="feedTrack">
+          <div class="feed-post">
+  <div class="fp-hdr">
+    <div class="fp-av">GO</div>
+    <div class="fp-meta">
+      <div class="fp-name">GoldTrader_88 <span class="fp-flag">🇲🇲</span></div>
+      <div class="fp-time">3m ago</div>
+    </div>
+  </div>
+  <div class="fp-body">XAU/USD ၃,၃၀၀ ကို ဖြတ်သွားနိုင်မလား? Bull trend ဆက်ရှိမယ်ဟု မျှော်လင့်ပါတယ် 📈</div>
+  <div class="fp-actions">
+    <div class="fp-act" onclick="this.classList.toggle('liked')">
+      <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      <span>42</span>
+    </div>
+    <div class="fp-act">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>12</span>
+    </div>
+    <div class="fp-act">
+      <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      <span>Share</span>
+    </div>
+  </div>
+</div>
+<div class="feed-post">
+  <div class="fp-hdr">
+    <div class="fp-av">MA</div>
+    <div class="fp-meta">
+      <div class="fp-name">MarketWatcher <span class="fp-flag">🇺🇸</span></div>
+      <div class="fp-time">8m ago</div>
+    </div>
+  </div>
+  <div class="fp-body">Gold surging on Middle East tensions. XAUUSD targeting $3,320 next resistance zone. Watch the breakout! 🔥</div>
+  <div class="fp-actions">
+    <div class="fp-act" onclick="this.classList.toggle('liked')">
+      <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      <span>87</span>
+    </div>
+    <div class="fp-act">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>24</span>
+    </div>
+    <div class="fp-act">
+      <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      <span>Share</span>
+    </div>
+  </div>
+</div>
+<div class="feed-post">
+  <div class="fp-hdr">
+    <div class="fp-av">FI</div>
+    <div class="fp-meta">
+      <div class="fp-name">FinanceKorea <span class="fp-flag">🇰🇷</span></div>
+      <div class="fp-time">15m ago</div>
+    </div>
+  </div>
+  <div class="fp-body">금 가격이 급등하고 있습니다! 지정학적 위험으로 안전자산 수요 증가 중 💰</div>
+  <div class="fp-actions">
+    <div class="fp-act" onclick="this.classList.toggle('liked')">
+      <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      <span>33</span>
+    </div>
+    <div class="fp-act">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>9</span>
+    </div>
+    <div class="fp-act">
+      <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      <span>Share</span>
+    </div>
+  </div>
+</div>
+<div class="feed-post">
+  <div class="fp-hdr">
+    <div class="fp-av">SH</div>
+    <div class="fp-meta">
+      <div class="fp-name">Shwe_Analyst <span class="fp-flag">🇲🇲</span></div>
+      <div class="fp-time">22m ago</div>
+    </div>
+  </div>
+  <div class="fp-body">ရေနံစျေးကွက် WTI $78 ကျော်ပြီ။ မြန်မာ Kyat ကပ်ရှောင်ဖို့ Gold ဝယ်ကောင်းတဲ့ အချိန်ပါ 🪙</div>
+  <div class="fp-actions">
+    <div class="fp-act" onclick="this.classList.toggle('liked')">
+      <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      <span>56</span>
+    </div>
+    <div class="fp-act">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>18</span>
+    </div>
+    <div class="fp-act">
+      <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      <span>Share</span>
+    </div>
+  </div>
+</div>
+<div class="feed-post">
+  <div class="fp-hdr">
+    <div class="fp-av">TH</div>
+    <div class="fp-meta">
+      <div class="fp-name">ThaiGoldPro <span class="fp-flag">🇹🇭</span></div>
+      <div class="fp-time">30m ago</div>
+    </div>
+  </div>
+  <div class="fp-body">ทองคำพุ่งสูงเพราะสถานการณ์ตะวันออกกลาง นักลงทุนหันมาซื้อสินทรัพย์ปลอดภัย📊</div>
+  <div class="fp-actions">
+    <div class="fp-act" onclick="this.classList.toggle('liked')">
+      <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      <span>29</span>
+    </div>
+    <div class="fp-act">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>7</span>
+    </div>
+    <div class="fp-act">
+      <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      <span>Share</span>
+    </div>
+  </div>
+</div>
+<div class="feed-post">
+  <div class="fp-hdr">
+    <div class="fp-av">CR</div>
+    <div class="fp-meta">
+      <div class="fp-name">CryptoMM <span class="fp-flag">🇲🇲</span></div>
+      <div class="fp-time">38m ago</div>
+    </div>
+  </div>
+  <div class="fp-body">BTC လည်း ၉၀k ထပ်ရောက်ပြီ Gold နဲ့ Crypto နှစ်ခုလုံး Bullish ဖြစ်နေတာ interesting မဟုတ်လား! 🚀</div>
+  <div class="fp-actions">
+    <div class="fp-act" onclick="this.classList.toggle('liked')">
+      <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      <span>71</span>
+    </div>
+    <div class="fp-act">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>31</span>
+    </div>
+    <div class="fp-act">
+      <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      <span>Share</span>
+    </div>
+  </div>
+</div>
+<div class="feed-post">
+  <div class="fp-hdr">
+    <div class="fp-av">GL</div>
+    <div class="fp-meta">
+      <div class="fp-name">Global_FX <span class="fp-flag">🇺🇸</span></div>
+      <div class="fp-time">45m ago</div>
+    </div>
+  </div>
+  <div class="fp-body">DXY weakening = Gold strengthening. Classic inverse correlation playing out perfectly today. Hold your longs! 💪</div>
+  <div class="fp-actions">
+    <div class="fp-act" onclick="this.classList.toggle('liked')">
+      <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      <span>94</span>
+    </div>
+    <div class="fp-act">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>28</span>
+    </div>
+    <div class="fp-act">
+      <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      <span>Share</span>
+    </div>
+  </div>
+</div>
+<div class="feed-post">
+  <div class="fp-hdr">
+    <div class="fp-av">JA</div>
+    <div class="fp-meta">
+      <div class="fp-name">JapanGold <span class="fp-flag">🇯🇵</span></div>
+      <div class="fp-time">55m ago</div>
+    </div>
+  </div>
+  <div class="fp-body">円安でゴールドの円建て価格が新高値。XAU/JPY を注視中です 👀</div>
+  <div class="fp-actions">
+    <div class="fp-act" onclick="this.classList.toggle('liked')">
+      <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      <span>41</span>
+    </div>
+    <div class="fp-act">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>15</span>
+    </div>
+    <div class="fp-act">
+      <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      <span>Share</span>
+    </div>
+  </div>
+</div>
+<div class="feed-post">
+  <div class="fp-hdr">
+    <div class="fp-av">MY</div>
+    <div class="fp-meta">
+      <div class="fp-name">MyanmarBull <span class="fp-flag">🇲🇲</span></div>
+      <div class="fp-time">1h ago</div>
+    </div>
+  </div>
+  <div class="fp-body">ကမ္ဘာ့စစ်ရေးအခြေအနေကြောင့် Safe-haven demand များပြားနေပါတယ်။ Gold hold လုပ်ဖို့ အကြံပေးပါတယ် ✅</div>
+  <div class="fp-actions">
+    <div class="fp-act" onclick="this.classList.toggle('liked')">
+      <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      <span>63</span>
+    </div>
+    <div class="fp-act">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>22</span>
+    </div>
+    <div class="fp-act">
+      <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      <span>Share</span>
+    </div>
+  </div>
+</div>
+<div class="feed-post">
+  <div class="fp-hdr">
+    <div class="fp-av">OI</div>
+    <div class="fp-meta">
+      <div class="fp-name">OilWatcher <span class="fp-flag">🇺🇸</span></div>
+      <div class="fp-time">1h ago</div>
+    </div>
+  </div>
+  <div class="fp-body">Crude Oil +2.3% today - inflation expectations rising. This is very bullish for precious metals going forward 🛢️</div>
+  <div class="fp-actions">
+    <div class="fp-act" onclick="this.classList.toggle('liked')">
+      <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      <span>48</span>
+    </div>
+    <div class="fp-act">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>14</span>
+    </div>
+    <div class="fp-act">
+      <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      <span>Share</span>
+    </div>
+  </div>
+</div>
+<div class="feed-post">
+  <div class="fp-hdr">
+    <div class="fp-av">GO</div>
+    <div class="fp-meta">
+      <div class="fp-name">GoldTrader_88 <span class="fp-flag">🇲🇲</span></div>
+      <div class="fp-time">3m ago</div>
+    </div>
+  </div>
+  <div class="fp-body">XAU/USD ၃,၃၀၀ ကို ဖြတ်သွားနိုင်မလား? Bull trend ဆက်ရှိမယ်ဟု မျှော်လင့်ပါတယ် 📈</div>
+  <div class="fp-actions">
+    <div class="fp-act" onclick="this.classList.toggle('liked')">
+      <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      <span>42</span>
+    </div>
+    <div class="fp-act">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>12</span>
+    </div>
+    <div class="fp-act">
+      <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      <span>Share</span>
+    </div>
+  </div>
+</div>
+<div class="feed-post">
+  <div class="fp-hdr">
+    <div class="fp-av">MA</div>
+    <div class="fp-meta">
+      <div class="fp-name">MarketWatcher <span class="fp-flag">🇺🇸</span></div>
+      <div class="fp-time">8m ago</div>
+    </div>
+  </div>
+  <div class="fp-body">Gold surging on Middle East tensions. XAUUSD targeting $3,320 next resistance zone. Watch the breakout! 🔥</div>
+  <div class="fp-actions">
+    <div class="fp-act" onclick="this.classList.toggle('liked')">
+      <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      <span>87</span>
+    </div>
+    <div class="fp-act">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>24</span>
+    </div>
+    <div class="fp-act">
+      <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      <span>Share</span>
+    </div>
+  </div>
+</div>
+<div class="feed-post">
+  <div class="fp-hdr">
+    <div class="fp-av">FI</div>
+    <div class="fp-meta">
+      <div class="fp-name">FinanceKorea <span class="fp-flag">🇰🇷</span></div>
+      <div class="fp-time">15m ago</div>
+    </div>
+  </div>
+  <div class="fp-body">금 가격이 급등하고 있습니다! 지정학적 위험으로 안전자산 수요 증가 중 💰</div>
+  <div class="fp-actions">
+    <div class="fp-act" onclick="this.classList.toggle('liked')">
+      <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      <span>33</span>
+    </div>
+    <div class="fp-act">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>9</span>
+    </div>
+    <div class="fp-act">
+      <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      <span>Share</span>
+    </div>
+  </div>
+</div>
+<div class="feed-post">
+  <div class="fp-hdr">
+    <div class="fp-av">SH</div>
+    <div class="fp-meta">
+      <div class="fp-name">Shwe_Analyst <span class="fp-flag">🇲🇲</span></div>
+      <div class="fp-time">22m ago</div>
+    </div>
+  </div>
+  <div class="fp-body">ရေနံစျေးကွက် WTI $78 ကျော်ပြီ။ မြန်မာ Kyat ကပ်ရှောင်ဖို့ Gold ဝယ်ကောင်းတဲ့ အချိန်ပါ 🪙</div>
+  <div class="fp-actions">
+    <div class="fp-act" onclick="this.classList.toggle('liked')">
+      <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      <span>56</span>
+    </div>
+    <div class="fp-act">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>18</span>
+    </div>
+    <div class="fp-act">
+      <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      <span>Share</span>
+    </div>
+  </div>
+</div>
+<div class="feed-post">
+  <div class="fp-hdr">
+    <div class="fp-av">TH</div>
+    <div class="fp-meta">
+      <div class="fp-name">ThaiGoldPro <span class="fp-flag">🇹🇭</span></div>
+      <div class="fp-time">30m ago</div>
+    </div>
+  </div>
+  <div class="fp-body">ทองคำพุ่งสูงเพราะสถานการณ์ตะวันออกกลาง นักลงทุนหันมาซื้อสินทรัพย์ปลอดภัย📊</div>
+  <div class="fp-actions">
+    <div class="fp-act" onclick="this.classList.toggle('liked')">
+      <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      <span>29</span>
+    </div>
+    <div class="fp-act">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>7</span>
+    </div>
+    <div class="fp-act">
+      <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      <span>Share</span>
+    </div>
+  </div>
+</div>
+<div class="feed-post">
+  <div class="fp-hdr">
+    <div class="fp-av">CR</div>
+    <div class="fp-meta">
+      <div class="fp-name">CryptoMM <span class="fp-flag">🇲🇲</span></div>
+      <div class="fp-time">38m ago</div>
+    </div>
+  </div>
+  <div class="fp-body">BTC လည်း ၉၀k ထပ်ရောက်ပြီ Gold နဲ့ Crypto နှစ်ခုလုံး Bullish ဖြစ်နေတာ interesting မဟုတ်လား! 🚀</div>
+  <div class="fp-actions">
+    <div class="fp-act" onclick="this.classList.toggle('liked')">
+      <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      <span>71</span>
+    </div>
+    <div class="fp-act">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>31</span>
+    </div>
+    <div class="fp-act">
+      <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      <span>Share</span>
+    </div>
+  </div>
+</div>
+<div class="feed-post">
+  <div class="fp-hdr">
+    <div class="fp-av">GL</div>
+    <div class="fp-meta">
+      <div class="fp-name">Global_FX <span class="fp-flag">🇺🇸</span></div>
+      <div class="fp-time">45m ago</div>
+    </div>
+  </div>
+  <div class="fp-body">DXY weakening = Gold strengthening. Classic inverse correlation playing out perfectly today. Hold your longs! 💪</div>
+  <div class="fp-actions">
+    <div class="fp-act" onclick="this.classList.toggle('liked')">
+      <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      <span>94</span>
+    </div>
+    <div class="fp-act">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>28</span>
+    </div>
+    <div class="fp-act">
+      <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      <span>Share</span>
+    </div>
+  </div>
+</div>
+<div class="feed-post">
+  <div class="fp-hdr">
+    <div class="fp-av">JA</div>
+    <div class="fp-meta">
+      <div class="fp-name">JapanGold <span class="fp-flag">🇯🇵</span></div>
+      <div class="fp-time">55m ago</div>
+    </div>
+  </div>
+  <div class="fp-body">円安でゴールドの円建て価格が新高値。XAU/JPY を注視中です 👀</div>
+  <div class="fp-actions">
+    <div class="fp-act" onclick="this.classList.toggle('liked')">
+      <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      <span>41</span>
+    </div>
+    <div class="fp-act">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>15</span>
+    </div>
+    <div class="fp-act">
+      <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      <span>Share</span>
+    </div>
+  </div>
+</div>
+<div class="feed-post">
+  <div class="fp-hdr">
+    <div class="fp-av">MY</div>
+    <div class="fp-meta">
+      <div class="fp-name">MyanmarBull <span class="fp-flag">🇲🇲</span></div>
+      <div class="fp-time">1h ago</div>
+    </div>
+  </div>
+  <div class="fp-body">ကမ္ဘာ့စစ်ရေးအခြေအနေကြောင့် Safe-haven demand များပြားနေပါတယ်။ Gold hold လုပ်ဖို့ အကြံပေးပါတယ် ✅</div>
+  <div class="fp-actions">
+    <div class="fp-act" onclick="this.classList.toggle('liked')">
+      <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      <span>63</span>
+    </div>
+    <div class="fp-act">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>22</span>
+    </div>
+    <div class="fp-act">
+      <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      <span>Share</span>
+    </div>
+  </div>
+</div>
+<div class="feed-post">
+  <div class="fp-hdr">
+    <div class="fp-av">OI</div>
+    <div class="fp-meta">
+      <div class="fp-name">OilWatcher <span class="fp-flag">🇺🇸</span></div>
+      <div class="fp-time">1h ago</div>
+    </div>
+  </div>
+  <div class="fp-body">Crude Oil +2.3% today - inflation expectations rising. This is very bullish for precious metals going forward 🛢️</div>
+  <div class="fp-actions">
+    <div class="fp-act" onclick="this.classList.toggle('liked')">
+      <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      <span>48</span>
+    </div>
+    <div class="fp-act">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>14</span>
+    </div>
+    <div class="fp-act">
+      <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      <span>Share</span>
+    </div>
+  </div>
+</div>
+        </div>
+      </div>
+
+      <!-- Gold Shops -->
+      <div class="sec-hdr" style="margin-top:18px">🏪 Myanmar Gold Shops</div>
+      <div class="shop-tabs-row" id="shopTabsRow">
+        <div class="shop-tab-btn active" onclick="switchShop(0,this)">ရွှေစင်</div>
+        <div class="shop-tab-btn" onclick="switchShop(1,this)">ရွှေနန်းတော်</div>
+        <div class="shop-tab-btn" onclick="switchShop(2,this)">ဇွဲထက်</div>
+        <div class="shop-tab-btn" onclick="switchShop(3,this)">ဝိန့်စိန်</div>
+        <div class="shop-tab-btn" onclick="switchShop(4,this)">အောင်သမာဓိ</div>
+      </div>
+      <div class="shop-card-wrap">
+        <div class="shop-card active" id="shop-0">
+          <div class="shop-title">Shwe Sin Gold &amp; Jewelry</div>
+          <div class="shop-mm">ရွှေစင် စိန်ရွှေရတနာဆိုင်</div>
+          <div class="shop-tags">
+            <span class="shop-tag">⭐ Trusted</span>
+            <span class="shop-tag">📍 Yangon</span>
+            <span class="shop-tag">💎 24K Gold</span>
+          </div>
+          <a class="shop-link-btn" href="https://www.shwesaneain.com/" target="_blank">🔗 Visit Website</a>
+        </div>
+        <div class="shop-card" id="shop-1">
+          <div class="shop-title">Shwe Nan Taw — Golden Palace</div>
+          <div class="shop-mm">ရွှေနန်းတော် စိန်ရွှေရတနာဆိုင်</div>
+          <div class="shop-tags">
+            <span class="shop-tag">⭐ Premium</span>
+            <span class="shop-tag">📍 Mandalay</span>
+            <span class="shop-tag">👑 VIP Service</span>
+          </div>
+          <span class="shop-link-btn" style="color:var(--subtext)">📞 Contact via Social Media</span>
+        </div>
+        <div class="shop-card" id="shop-2">
+          <div class="shop-title">Zwe Htet Gold &amp; Jewellery</div>
+          <div class="shop-mm">ဇွဲထက် စိန်ရွှေရတနာဆိုင်</div>
+          <div class="shop-tags">
+            <span class="shop-tag">⭐ Certified</span>
+            <span class="shop-tag">📍 Yangon &amp; Mandalay</span>
+          </div>
+          <a class="shop-link-btn" href="https://share.google/igKc799gt1Kt7FL6O" target="_blank">🔗 Yangon Branch</a>
+          <br><a class="shop-link-btn" href="https://share.google/Cqs6HaN3lcJwDpifT" target="_blank" style="margin-top:6px">🔗 Mandalay Branch</a>
+        </div>
+        <div class="shop-card" id="shop-3">
+          <div class="shop-title">Weint Sein Gold &amp; Jewelry</div>
+          <div class="shop-mm">ဝိန့်စိန် စိန်ရွှေရတနာဆိုင်</div>
+          <div class="shop-tags">
+            <span class="shop-tag">⭐ Established</span>
+            <span class="shop-tag">💍 Jewellery</span>
+          </div>
+          <span class="shop-link-btn" style="color:var(--subtext)">📍 Visit Branch Locations</span>
+        </div>
+        <div class="shop-card" id="shop-4">
+          <div class="shop-title">Aung Thamardi Gold &amp; Jewellery</div>
+          <div class="shop-mm">အောင်သမာဓိ စိန်ရွှေရတနာဆိုင်</div>
+          <div class="shop-tags">
+            <span class="shop-tag">⭐ Reliable</span>
+            <span class="shop-tag">🏆 Award-Winning</span>
+          </div>
+          <a class="shop-link-btn" href="https://share.google/GqsaPIiBZ2Rb7O9vS" target="_blank">🔗 View on Maps</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== TRADE ===================== -->
+    <div class="page" id="page-trade">
+      <div class="trade-hdr">
+        <div class="trade-title">Trade</div>
+        <div class="sym-badge" id="activeSym">XAU/USD</div>
+      </div>
+
+      <!-- Market selector -->
+      <div class="mkt-tabs">
+        <div class="mkt-tab active" onclick="switchMarket('OANDA:XAUUSD','XAU/USD',this)">Gold</div>
+        <div class="mkt-tab" onclick="switchMarket('BINANCE:BTCUSDT','BTC/USDT',this)">Crypto</div>
+        <div class="mkt-tab" onclick="switchMarket('NYMEX:CL1!','WTI Oil',this)">Oil</div>
+        <div class="mkt-tab" onclick="switchMarket('AMEX:SPY','S&amp;P 500',this)">Stock</div>
+      </div>
+
+      <!-- TradingView Trade -->
+      <!-- ဘေးအပြည့်နဲ့ အမြင့် 450px လိုချင်ရင် -->
+<div class="tv-wrap" id="tv-trade-wrap" style="margin:10px 0 0;height: 450px">
+
+        <div class="tv-loading" id="tv-trade-loading">
+          <div class="spinner"></div>
+          <p>Loading Chart...</p>
+        </div>
+       <!-- Line 1173 ကို ဒီလို ပြင်လိုက်ပါ -->
+<div id="tv_trade" style="height: 100%; width: 100%;"></div>
+
+      </div>
+
+      <!-- Timer options -->
+      <div class="sec-hdr">Select Trading Timer</div>
+      <div class="timer-grid">
+        <div class="timer-opt sel" onclick="selectTimer(this,30,15,'100-1,000')" data-sec="30" data-pct="15">
+          <div class="to-sec">30s</div>
+          <div class="to-pct">+15%</div>
+          <div class="to-range">$100–1K</div>
+        </div>
+        <div class="timer-opt" onclick="selectTimer(this,60,20,'1K-10K')" data-sec="60" data-pct="20">
+          <div class="to-sec">60s</div>
+          <div class="to-pct">+20%</div>
+          <div class="to-range">$1K–10K</div>
+        </div>
+        <div class="timer-opt" onclick="selectTimer(this,90,25,'10K-30K')" data-sec="90" data-pct="25">
+          <div class="to-sec">90s</div>
+          <div class="to-pct">+25%</div>
+          <div class="to-range">$10K–30K</div>
+        </div>
+        <div class="timer-opt" onclick="selectTimer(this,120,30,'30K-50K')" data-sec="120" data-pct="30">
+          <div class="to-sec">120s</div>
+          <div class="to-pct">+30%</div>
+          <div class="to-range">$30K–50K</div>
+        </div>
+        <div class="timer-opt" onclick="selectTimer(this,180,50,'50K-100K')" data-sec="180" data-pct="50">
+          <div class="to-sec">180s</div>
+          <div class="to-pct">+50%</div>
+          <div class="to-range">$50K–100K</div>
+        </div>
+        <div class="timer-opt" style="display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(212,175,55,.06);border-style:dashed;">
+          <div style="font-size:20px">⚡</div>
+          <div class="to-range" style="margin-top:4px;font-size:10px;color:var(--gold)">VIP Only</div>
+        </div>
+      </div>
+
+      <!-- Timer display -->
+      <div class="timer-panel">
+        <div>
+          <div class="tp-lbl">Time</div>
+          <div class="tp-val" id="timerDisp">30s</div>
+        </div>
+        <div class="tp-sep"></div>
+        <div>
+          <div class="tp-lbl">Profit</div>
+          <div class="tp-pct" id="profitDisp">+15%</div>
+        </div>
+        <div class="tp-sep"></div>
+        <div class="tp-right">
+          <div class="tp-lbl">Countdown</div>
+          <div class="tp-val" id="countdownDisp" style="color:var(--up)">--</div>
+        </div>
+      </div>
+<!-- Trading Amount Input Section -->
+<div style="margin: 15px 0; text-align: center;">
+    <p style="color: #aaa; font-size: 12px; margin-bottom: 5px;">ENTER AMOUNT ($)</p>
+    <input type="number" id="tradeAmount" placeholder="100" 
+           style="width: 90%; padding: 12px; background: #1E1E1E; border: 1px solid #FFD700; 
+                  color: white; border-radius: 8px; font-size: 18px; text-align: center; outline: none;">
+</div>
+
+      <div class="trade-btn-row">
+        <div class="btn-buy" onclick="startTrade()">▲ BUY</div>
+
+       <div class="btn-sell" onclick="startTrade()">▼ SELL</div>
+      </div>
+    </div>
+
+    <!-- ===================== WALLET ===================== -->
+    <div class="page" id="page-wallet">
+      <div class="wallet-hero">
+        <div class="page-topbar" style="padding:0 0 14px">
+          <div class="topbar-title" style="color:#fff">Wallet</div>
+        </div>
+        <div class="wh-lbl">Total Balance (USD)</div>
+        <div class="wh-bal" id="walBal">$0.00</div>
+        <div class="wh-sub" id="walSub">≈ 0 MMK &nbsp; | &nbsp; 0 WG</div>
+      </div>
+
+      <div class="bal-cards">
+        <div class="bal-card">
+          <div class="bc-unit">WG</div>
+          <div class="bc-val" id="walWG">0</div>
+        </div>
+        <div class="bal-card">
+          <div class="bc-unit">USD</div>
+          <div class="bc-val fiat" id="walUSD">$0</div>
+        </div>
+        <div class="bal-card">
+          <div class="bc-unit">MMK</div>
+          <div class="bc-val fiat" id="walMMK">0</div>
+        </div>
+      </div>
+
+      <div class="wallet-actions">
+        <div class="wa-btn"><div class="wa-ico">📥</div><div class="wa-lbl">Deposit</div></div>
+        <div class="wa-btn"><div class="wa-ico">📤</div><div class="wa-lbl">Withdraw</div></div>
+        <div class="wa-btn"><div class="wa-ico">🔄</div><div class="wa-lbl">Convert</div></div>
+      </div>
+
+      <div class="sec-hdr" style="margin-top:14px">Transaction History</div>
+      <div id="txList">
+        <div class="tx-item">
+          <div class="tx-l"><div class="tx-ico" style="background:rgba(46,204,113,.12)">📈</div><div><div class="tx-name">Buy XAU/USD</div><div class="tx-date">Mar 29, 2026 · 09:42</div></div></div>
+          <div class="tx-amt dn">-$500.00</div>
+        </div>
+        <div class="tx-item">
+          <div class="tx-l"><div class="tx-ico" style="background:rgba(212,175,55,.1)">💰</div><div><div class="tx-name">Profit Credited</div><div class="tx-date">Mar 28 · 16:30</div></div></div>
+          <div class="tx-amt up">+$128.40</div>
+        </div>
+        <div class="tx-item">
+          <div class="tx-l"><div class="tx-ico" style="background:rgba(52,152,219,.1)">📥</div><div><div class="tx-name">Deposit</div><div class="tx-date">Mar 27 · 11:00</div></div></div>
+          <div class="tx-amt up">+$1,000.00</div>
+        </div>
+        <div class="tx-item">
+          <div class="tx-l"><div class="tx-ico" style="background:rgba(255,71,87,.1)">📤</div><div><div class="tx-name">Withdraw</div><div class="tx-date">Mar 25 · 09:15</div></div></div>
+          <div class="tx-amt dn">-$200.00</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== RECORD ===================== -->
+    <div class="page" id="page-record">
+      <div class="page-topbar"><div class="topbar-title">Trade Record</div></div>
+      <div class="rec-sum">
+        <div class="rs-card"><div class="rs-lbl">Today</div><div class="rs-val up" id="recToday">+$128</div></div>
+        <div class="rs-card"><div class="rs-lbl">Week</div><div class="rs-val up" id="recWeek">+$540</div></div>
+        <div class="rs-card"><div class="rs-lbl">Month</div><div class="rs-val up" id="recMonth">+$1,280</div></div>
+      </div>
+      <div class="sec-hdr">Trade History</div>
+      <div id="recList">
+        <div class="rec-item">
+          <div><div class="ri-dir buy">BUY</div><div class="ri-pair">XAU/USD</div><div class="ri-date">Mar 29 · 09:42</div></div>
+          <div style="text-align:right"><div class="ri-pnl up">+$88.40</div><div class="ri-lot">0.05 Lot</div></div>
+        </div>
+        <div class="rec-item">
+          <div><div class="ri-dir sell">SELL</div><div class="ri-pair">XAU/USD</div><div class="ri-date">Mar 28 · 14:10</div></div>
+          <div style="text-align:right"><div class="ri-pnl up">+$40.00</div><div class="ri-lot">0.02 Lot</div></div>
+        </div>
+        <div class="rec-item">
+          <div><div class="ri-dir buy">BUY</div><div class="ri-pair">XAU/USD</div><div class="ri-date">Mar 27 · 10:05</div></div>
+          <div style="text-align:right"><div class="ri-pnl dn">-$22.00</div><div class="ri-lot">0.01 Lot</div></div>
+        </div>
+        <div class="rec-item">
+          <div><div class="ri-dir buy">BUY</div><div class="ri-pair">BTC/USDT</div><div class="ri-date">Mar 26 · 09:00</div></div>
+          <div style="text-align:right"><div class="ri-pnl up">+$192.00</div><div class="ri-lot">0.10 Lot</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== PROFILE ===================== -->
+    <div class="page" id="page-profile">
+      <div class="prof-hdr">
+        <div class="pan">
+          <img id="profLogoImg" src="" alt="COMEX">
+          <div>
+            <div class="pan-text">COMEX GOLD TRADE</div>
+            <div class="pan-sub">Member Account</div>
+          </div>
+        </div>
+        <div class="hdr-actions">
+          <div class="hdr-btn" onclick="openNotif()">
+            <span style="font-size:18px">🔔</span>
+            <div class="badge-dot"></div>
+          </div>
+          <div class="hdr-btn" onclick="openLang()">
+            <img id="profWorldIco" src="" alt="Lang">
+          </div>
+        </div>
+      </div>
+
+      <div class="prof-hero">
+        <div class="ph-av-wrap">
+          <img class="ph-av" id="profAvatar" src="" alt="User">
+          <div class="ph-fl"><img id="profFlag" src="" alt="MM"></div>
+          <div class="ph-cam" onclick="document.getElementById('photoInput').click()">📷</div>
+        </div>
+        <input type="file" id="photoInput" accept="image/*" onchange="changePhoto(this)">
+        <div class="ph-name" id="profName">Ko Aung Kyaw</div>
+        <div class="ph-uid" id="profUID">UID: 00482931</div>
+        <div class="ph-level">⭐ Standard Member</div>
+      </div>
+
+<!-- Account settings -->
+  <div class="pm-sec">
+    <div class="pm-sec-title">Account</div>
+    <div class="pm-item">
+      <div class="pm-l"><div class="pm-ico" style="background:rgba(212,175,55,.1)">📊</div><div><div class="pm-name">Account Level</div><div class="pm-sub">Standard · Upgrade Available</div></div></div>
+      <div class="pm-arr">›</div>
+    </div>
+    <div class="pm-item">
+      <div class="pm-l"><div class="pm-ico" style="background:rgba(52,152,219,.1)">🪪</div><div><div class="pm-name">KYC Verification</div><div class="pm-sub">Verify identity</div></div></div>
+      <div class="pm-arr">›</div>
+    </div>
+    <div class="pm-item">
+      <div class="pm-l"><div class="pm-ico" style="background:rgba(46,204,113,.1)">📱</div><div><div class="pm-name">Change Phone Number</div></div></div>
+      <div class="pm-arr">›</div>
+    </div>
+    <div class="pm-item">
+      <div class="pm-l"><div class="pm-ico" style="background:rgba(149,128,255,.1)">🔒</div><div><div class="pm-name">Change Password</div></div></div>
+      <div class="pm-arr">›</div>
+    </div>
+    <div class="pm-item" style="border:1px solid rgba(212,175,55,.25)">
+      <div class="pm-l"><div class="pm-ico" style="background:rgba(212,175,55,.12)">👑</div><div><div class="pm-name" style="color:var(--gold2)">VIP Plan &amp; Features</div><div class="pm-sub">Unlock advanced trading</div></div></div>
+      <div class="pm-arr" style="color:var(--gold2)">›</div>
+    </div>
+  </div>
+
+  <div class="pm-sec">
+    <div class="pm-sec-title">Preferences</div>
+    <div class="pm-item" onclick="openLang()">
+      <div class="pm-l">
+        <div class="pm-ico" style="background:rgba(0,200,200,.1)"><img id="pmLangIco" src="" alt="Lang"></div>
+        <div><div class="pm-name">Language</div><div class="pm-sub" id="pmLangSub">🇲🇲 Myanmar</div></div>
+      </div>
+      <div class="pm-arr">›</div>
+    </div>
+    <div class="pm-item">
+      <div class="pm-l">
+        <div class="pm-ico" style="background:rgba(100,120,220,.1)"><img id="pmThemeIco" src="" alt="Theme"></div>
+        <div class="pm-name">Dark Mode</div>
+      </div>
+      <div class="pm-toggle on" id="themeToggle" onclick="toggleTheme()"><div class="pm-thumb"></div></div>
+    </div>
+  </div>
+
+  <div class="pm-sec">
+    <div class="pm-sec-title">Support</div>
+    <div class="pm-item" onclick="openChat()">
+      <div class="pm-l"><div class="pm-ico" style="background:rgba(52,152,219,.1)"><img id="pmCSIco" src="" alt="CS"></div><div class="pm-name">Customer Service</div></div>
+      <div class="pm-arr">›</div>
+    </div>
+<div class="pm-item" onclick="showAbout()">
+
+    <div class="pm-l">
+        <div class="pm-ico" style="background:rgba(52, 152, 219, 1)">ℹ️</div>
+        <div class="pm-name">About App</div>
+    </div>
+    <div class="pm-arr"></div>
+</div>
+
+    <div class="pm-item" onclick="doSignOut()">
+      <div class="pm-l"><div class="pm-ico" style="background:rgba(231,76,60,.1)">🚪</div><div class="pm-name" style="color:#ff4757">Sign Out</div></div>
+      <div class="pm-arr" style="color:#ff4757">›</div>
+    </div>
+  </div>
+
+      <!-- About -->
+      <div class="about-box">
+        <div class="about-row">
+          <img id="aboutLogo" src="" style="width:30px;height:30px;object-fit:contain" alt="COMEX">
+          <div>
+            <div class="about-title">COMEX GOLD TRADE</div>
+            <div class="about-sub">Myanmar Premier Trading Platform</div>
+          </div>
+        </div>
+        <div class="about-p">COMEX GOLD TRADE is Myanmar's most trusted digital gold trading platform, founded in 2024. We provide real-time XAU/USD market data, professional trading tools, and a secure investment environment for Myanmar traders.</div>
+        <div class="about-p">Our platform supports gold, cryptocurrency, oil, and stock market trading with competitive spreads and lightning-fast execution. All transactions are secured with Firebase Authentication and end-to-end encryption.</div>
+        <div class="about-contact">
+          <b>📍 Head Office</b> No.42, Merchant Street, Pabedan Township, Yangon, Myanmar
+          <b>📞 Phone</b> +95 9 123 456 789
+          <b>✉️ Email</b> <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="1b686e6b6b74696f5b7874767e637c74777f6f697a7f7e35787476">[email&#160;protected]</a>
+          <b>🌐 Website</b> www.comexgoldtrade.com
+          <b>🕐 Hours</b> Mon–Sat 09:00 – 18:00 MMT
+        </div>
+      </div>
+
+    </div><!-- /profile -->
+  </div><!-- /screen -->
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <div class="nav-item active" data-tab="home" onclick="switchTab(this)">
+      <div class="nav-iw"><img id="navHome" src="" alt="Home"><div class="shimmer"></div></div>
+      <span class="nav-label" data-i18n="home">Home</span>
+    </div>
+    <div class="nav-item" data-tab="trade" onclick="switchTab(this)">
+      <div class="nav-iw"><img id="navTrade" src="" alt="Trade"><div class="shimmer"></div></div>
+      <span class="nav-label" data-i18n="trade">Trade</span>
+    </div>
+    <div class="nav-item" data-tab="wallet" onclick="switchTab(this)">
+      <div class="nav-iw"><img id="navWallet" src="" alt="Wallet"><div class="shimmer"></div></div>
+      <span class="nav-label" data-i18n="wallet">Wallet</span>
+    </div>
+    <div class="nav-item" data-tab="record" onclick="switchTab(this)">
+      <div class="nav-iw"><img id="navRecord" src="" alt="Record"><div class="shimmer"></div></div>
+      <span class="nav-label" data-i18n="record">Record</span>
+    </div>
+    <div class="nav-item" data-tab="profile" onclick="switchTab(this)">
+      <div class="nav-iw"><img id="navProfile" src="" alt="Profile"><div class="shimmer"></div></div>
+      <span class="nav-label" data-i18n="me">Me</span>
+    </div>
+  </nav>
+
+</div><!-- /mainApp -->
+
+<!-- ===== LANGUAGE MODAL ===== -->
+<div class="overlay" id="langOverlay" onclick="closeLangOut(event)" style="display:none">
+  <div class="sheet">
+    <div class="sheet-hdr">
+      <span class="sheet-title">Select Language</span>
+      <span class="sheet-close" onclick="closeLang()">✕</span>
+    </div>
+    <div class="lang-item" onclick="setLang('mm','🇲🇲','Myanmar','မြန်မာ')">
+      <div class="lang-l"><span class="lang-flag">🇲🇲</span><div><div class="lang-n">မြန်မာ</div><div class="lang-en">Burmese</div></div></div>
+      <div class="lang-chk show" id="lc-mm">✓</div>
+    </div>
+    <div class="lang-item" onclick="setLang('en','🇺🇸','English','English')">
+      <div class="lang-l"><span class="lang-flag">🇺🇸</span><div><div class="lang-n">English</div><div class="lang-en">United States</div></div></div>
+      <div class="lang-chk" id="lc-en">✓</div>
+    </div>
+    <div class="lang-item" onclick="setLang('ja','🇯🇵','Japanese','日本語')">
+      <div class="lang-l"><span class="lang-flag">🇯🇵</span><div><div class="lang-n">日本語</div><div class="lang-en">Japanese</div></div></div>
+      <div class="lang-chk" id="lc-ja">✓</div>
+    </div>
+    <div class="lang-item" onclick="setLang('th','🇹🇭','Thai','ภาษาไทย')">
+      <div class="lang-l"><span class="lang-flag">🇹🇭</span><div><div class="lang-n">ภาษาไทย</div><div class="lang-en">Thai</div></div></div>
+      <div class="lang-chk" id="lc-th">✓</div>
+    </div>
+    <div class="lang-item" onclick="setLang('ko','🇰🇷','Korean','한국어')">
+      <div class="lang-l"><span class="lang-flag">🇰🇷</span><div><div class="lang-n">한국어</div><div class="lang-en">Korean</div></div></div>
+      <div class="lang-chk" id="lc-ko">✓</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== CS CHAT ===== -->
+<div class="overlay" id="chatOverlay" onclick="closeChatOut(event)" style="display:none">
+  <div class="chat-sheet">
+    <div class="chat-hdr">
+      <div class="cs-wrap">
+        <div class="cs-av-w">
+          <img class="cs-av" id="csAv" src="" alt="CS">
+          <div class="cs-dot"></div>
+        </div>
+        <div><div class="cs-name">COMEX Support</div><div class="cs-status">● Online Now</div></div>
+      </div>
+      <span class="chat-close" onclick="closeChat()">✕</span>
+    </div>
+    <div class="chat-msgs" id="chatMsgs">
+      <div class="msg-row">
+        <img class="msg-av" id="csAv2" src="" alt="CS">
+        <div class="msg-bub"><p>မင်္ဂလာပါ! COMEX Gold Trade မှ ကြိုဆိုပါတယ် 🙏<br>ကူညီပေးနိုင်ရန် ဝမ်းသာပါတယ်</p><div class="msg-t">09:41</div></div>
+      </div>
+    </div>
+    <div class="chat-input-row">
+      <div class="chat-inp" contenteditable="true" id="chatInp">Message...</div>
+      <div class="chat-send" onclick="sendMsg()">➤</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== NOTIFICATIONS ===== -->
+<div class="notif-overlay" id="notifOverlay" onclick="closeNotifOut(event)" style="display:none">
+  <div class="notif-sheet">
+    <div class="notif-hdr">🔔 Notifications</div>
+    <div class="ni">
+      <div class="ni-dot"></div>
+      <div><div class="ni-title">Account Approved ✅</div><div class="ni-body">Your COMEX account is now active. Start trading gold today!</div><div class="ni-time">2 hours ago</div></div>
+    </div>
+    <div class="ni">
+      <div class="ni-dot" style="background:#ff4757"></div>
+      <div><div class="ni-title">Price Alert 📊</div><div class="ni-body">XAU/USD reached $3,300 — your target level!</div><div class="ni-time">5 hours ago</div></div>
+    </div>
+    <div class="ni">
+      <div class="ni-dot" style="background:var(--up)"></div>
+      <div><div class="ni-title">Profit Credited 💰</div><div class="ni-body">+$128.40 has been credited to your wallet</div><div class="ni-time">Yesterday</div></div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+// ========== FIREBASE CONFIG ==========
+const firebaseConfig = {
+  apiKey: "AIzaSyA8FRrFcrkkHGgPwPkiRCY90-SOueRLrDY",
+  authDomain: "comex-gold.firebaseapp.com",
+  databaseURL: "https://comex-gold-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "comex-gold",
+  storageBucket: "comex-gold.firebasestorage.app",
+  messagingSenderId: "698161924390",
+  appId: "1:698161924390:web:f959ce4c74c0a623fc99e7",
+  measurementId: "G-5ZERCCNH7E"
+};
+
+// ========== FIREBASE INIT ==========
+let app, auth, db;
+try {
+  app  = firebase.initializeApp(firebaseConfig);
+  auth = firebase.auth();
+  db   = firebase.firestore();
+} catch(e) { console.warn('Firebase init:', e.message); }
+
+// ========== GLOBAL STATE ==========
+let currentUser = null;         // { uid, realName, balance, ... }
+let chatUnsubscribe = null;     // live chat listener
+let walletUnsubscribe = null;   // live wallet listener
+
+// ========== IMAGES (SVG DATA URIs — unchanged from original) ==========
+const IMGS = {};
+function assignImages() {
+  const svgMap = {
+    GOLD: `data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PGNpcmNsZSBjeD0iMzIiIGN5PSIzMiIgcj0iMzIiIGZpbGw9IiNkNGFmMzciLz48dGV4dCB4PSIzMiIgeT0iNDIiIGZvbnQtc2l6ZT0iMzIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiMwMDAiPuKYmuKYmjwvdGV4dD48L3N2Zz4=`,
+    PROFILE: `data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PGNpcmNsZSBjeD0iMzIiIGN5PSIzMiIgcj0iMzIiIGZpbGw9IiMyYTI0MTgiLz48Y2lyY2xlIGN4PSIzMiIgY3k9IjI1IiByPSIxMiIgZmlsbD0iI2Q0YWYzNyIvPjxlbGxpcHNlIGN4PSIzMiIgY3k9IjU1IiByeD0iMjAiIHJ5PSIxMiIgZmlsbD0iI2Q0YWYzNyIvPjwvc3ZnPg==`,
+    MYANMAR: `data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAyNCI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjgiIGZpbGw9IiNGQ0UwMDAiLz48cmVjdCB5PSI4IiB3aWR0aD0iMzIiIGhlaWdodD0iOCIgZmlsbD0iIzM0QjIzMyIvPjxyZWN0IHk9IjE2IiB3aWR0aD0iMzIiIGhlaWdodD0iOCIgZmlsbD0iI0VBMjAyMCIvPjxwb2x5Z29uIHBvaW50cz0iMTYsNCAxNy41LDkgMjIsOSAxOC41LDEyIDIwLDE3IDE2LDE0IDEyLDE3IDEzLjUsMTIgMTAsOSAxNC41LDkiIGZpbGw9IndoaXRlIi8+PC9zdmc+`,
+    WORLDWIDE: `data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZDRhZjM3IiBzdHJva2Utd2lkdGg9IjIiPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjEwIi8+PGxpbmUgeDE9IjIiIHkxPSIxMiIgeDI9IjIyIiB5Mj0iMTIiLz48cGF0aCBkPSJNMTIgMmE5IDkgMCAwIDEgMCAyME05IDJhOSA5IDAgMCAwIDAgMjAiLz48L3N2Zz4=`,
+    HOME: `data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiI+PHBhdGggZD0iTTMgOWw5LTcgOSA3djExYTIgMiAwIDAgMS0yIDJINWEyIDIgMCAwIDEtMi0yeiIvPjxwb2x5bGluZSBwb2ludHM9IjkgMjIgOSAxMiAxNSAxMiAxNSAyMiIvPjwvc3ZnPg==`,
+    GROWTH: `data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiI+PHBvbHlsaW5lIHBvaW50cz0iMjMgNiAyMyAxIDE4IDEiLz48cGF0aCBkPSJNMjMgMUwxNCA4bC00LTMtNyA3Ii8+PGxpbmUgeDE9IjEiIHkxPSIxNyIgeDI9IjEiIHkyPSIyMyIvPjxsaW5lIHgxPSI4IiB5MT0iMTMiIHgyPSI4IiB5Mj0iMjMiLz48bGluZSB4MT0iMTUiIHkxPSI5IiB4Mj0iMTUiIHkyPSIyMyIvPjxsaW5lIHgxPSIyMiIgeTE9IjUiIHgyPSIyMiIgeTI9IjIzIi8+PC9zdmc+`,
+    INCOME: `data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiI+PHJlY3QgeD0iMSIgeT0iNCIgd2lkdGg9IjIyIiBoZWlnaHQ9IjE2IiByeD0iMiIgcnk9IjIiLz48bGluZSB4MT0iMSIgeTE9IjEwIiB4Mj0iMjMiIHkyPSIxMCIvPjwvc3ZnPg==`,
+    PROFIT: `data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiI+PHBhdGggZD0iTTE0IDJINmEyIDIgMCAwIDAtMiAydjE2YTIgMiAwIDAgMCAyIDJoMTJhMiAyIDAgMCAwIDItMlY4eiIvPjxwb2x5bGluZSBwb2ludHM9IjE0IDIgMTQgOCAyMCA4Ii8+PGxpbmUgeDE9IjE2IiB5MT0iMTMiIHgyPSI4IiB5Mj0iMTMiLz48bGluZSB4MT0iMTYiIHkxPSIxNyIgeDI9IjgiIHkyPSIxNyIvPjxwb2x5bGluZSBwb2ludHM9IjEwIDkgOSA5IDggOSIvPjwvc3ZnPg==`,
+    PROFILE2: `data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiI+PHBhdGggZD0iTTIwIDIxdi0yYTQgNCAwIDAgMC00LTRINWE0IDQgMCAwIDAtNCA0djIiLz48Y2lyY2xlIGN4PSIxMiIgY3k9IjciIHI9IjQiLz48L3N2Zz4=`,
+    DARKMODE: `data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiI+PHBhdGggZD0iTTIxIDEyLjc5QTkgOSAwIDEgMSAxMS4yMSAzIDcgNyAwIDAgMCAyMSAxMi43OXoiLz48L3N2Zz4=`,
+  };
+  IMGS.GOLD=svgMap.GOLD; IMGS.PROFILE=svgMap.PROFILE; IMGS.MYANMAR=svgMap.MYANMAR;
+  IMGS.WORLDWIDE=svgMap.WORLDWIDE; IMGS.HOME=svgMap.HOME; IMGS.GROWTH=svgMap.GROWTH;
+  IMGS.INCOME=svgMap.INCOME; IMGS.PROFIT=svgMap.PROFIT; IMGS.DARKMODE=svgMap.DARKMODE;
+
+  function set(id, key) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (el.tagName === 'IMG') el.src = svgMap[key] || svgMap.GOLD;
+    else el.style.backgroundImage = `url("${svgMap[key]||svgMap.GOLD}")`;
+  }
+  set('profLogoImg','GOLD'); set('aboutLogo','GOLD');
+  set('navHome','HOME'); set('navTrade','GROWTH');
+  set('navWallet','INCOME'); set('navRecord','PROFIT');
+  set('navProfile','PROFILE2');
+  set('homeWorldIco','WORLDWIDE'); set('profWorldIco','WORLDWIDE');
+  set('pmLangIco','WORLDWIDE');
+  set('pmThemeIco','DARKMODE');
+  set('pmCSIco','PROFILE'); set('csAv','PROFILE'); set('csAv2','PROFILE');
+  set('profAvatar','PROFILE'); set('profFlag','MYANMAR');
+}
+
+// ========== AUTH STATE ==========
+if (auth) {
+  auth.onAuthStateChanged(async (user) => {
+    if (user) {
+      try {
+        const snap = await db.collection('users').doc(user.uid).get();
+        if (snap.exists) {
+          const data = snap.data();
+          if (data.status === 'active') {
+            currentUser = { uid: user.uid, ...data };
+            showMain(data);
+            startWalletListener(user.uid);
+            startChatListener(user.uid);
+          } else {
+            document.getElementById('pendingBox').style.display = 'block';
+            document.getElementById('regErr').textContent = '';
+            showAuthTab('register');
+            auth.signOut();
+          }
+        } else {
+          auth.signOut();
+        }
+      } catch(e) {
+        console.warn('Auth check:', e.message);
+        auth.signOut();
+      }
+    } else {
+      currentUser = null;
+      if (walletUnsubscribe) { walletUnsubscribe(); walletUnsubscribe = null; }
+      if (chatUnsubscribe)   { chatUnsubscribe();   chatUnsubscribe   = null; }
+    }
+  });
+}
+
+// ========== SHOW MAIN APP ==========
+function showMain(data) {
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('mainApp').style.display   = '';
+  if (data && data.realName) {
+    const el = document.getElementById('profName');
+    if (el) el.textContent = data.realName;
+  }
+  if (data && data.uid) {
+    const el = document.getElementById('profUID');
+    if (el) el.textContent = 'UID: ' + data.uid.slice(0,10).toUpperCase();
+  }
+  updateWalletUI(data.balance || { usd:0, wg:0, mmk:0 });
+  updateRecordUI(data.trade_history || []);
+  initCharts();
+  startClock();
+}
+
+// ========== LIVE WALLET LISTENER ==========
+function startWalletListener(uid) {
+  if (walletUnsubscribe) walletUnsubscribe();
+  walletUnsubscribe = db.collection('users').doc(uid).onSnapshot(snap => {
+    if (!snap.exists) return;
+    const data = snap.data();
+    currentUser = { ...currentUser, ...data };
+    updateWalletUI(data.balance || { usd:0, wg:0, mmk:0 });
+    updateRecordUI(data.trade_history || []);
+  });
+}
+
+// ========== UPDATE WALLET UI ==========
+function updateWalletUI(bal) {
+  const usd = Number(bal.usd || 0);
+  const wg  = Number(bal.wg  || 0);
+  const mmk = Number(bal.mmk || 0);
+  const setTxt = (id, txt) => { const el=document.getElementById(id); if(el) el.textContent=txt; };
+  setTxt('walBal',  '$' + usd.toFixed(2));
+  setTxt('walSub',  '≈ ' + mmk.toLocaleString() + ' MMK  |  ' + wg.toFixed(4) + ' WG');
+  setTxt('walUSD',  '$' + usd.toFixed(2));
+  setTxt('walWG',   wg.toFixed(4));
+  setTxt('walMMK',  mmk.toLocaleString());
+  // Home balance display
+  const hb = document.getElementById('homeBal');
+  if (hb) hb.textContent = '$' + usd.toFixed(2);
+}
+
+// ========== UPDATE RECORD UI ==========
+function updateRecordUI(history) {
+  if (!Array.isArray(history) || !history.length) {
+    const rl = document.getElementById('recList');
+    const tl = document.getElementById('txList');
+    if (rl) rl.innerHTML = '<div style="text-align:center;padding:30px;color:var(--subtext)">No trade history yet.</div>';
+    if (tl) tl.innerHTML = '<div style="text-align:center;padding:30px;color:var(--subtext)">No transactions yet.</div>';
+    const setZ = id => { const el=document.getElementById(id); if(el) el.textContent='$0.00'; };
+    setZ('recToday'); setZ('recWeek'); setZ('recMonth');
+    return;
+  }
+  // Sort newest first
+  const sorted = [...history].sort((a,b) => (b.timestamp||0) - (a.timestamp||0));
+  const now = Date.now();
+  let today=0, week=0, month=0;
+  sorted.forEach(t => {
+    const age = now - (t.timestamp||0);
+    if (age < 86400000)   today  += (t.pnl||0);
+    if (age < 604800000)  week   += (t.pnl||0);
+    if (age < 2592000000) month  += (t.pnl||0);
+  });
+  const fmtPnl = v => (v>=0?'+':'-')+'$'+Math.abs(v).toFixed(2);
+  const setTxt = (id,txt) => { const el=document.getElementById(id); if(el) el.textContent=txt; };
+  setTxt('recToday', fmtPnl(today));
+  setTxt('recWeek',  fmtPnl(week));
+  setTxt('recMonth', fmtPnl(month));
+
+  // Record list
+  const rl = document.getElementById('recList');
+  if (rl) {
+    rl.innerHTML = sorted.slice(0,30).map(t => {
+      const d = new Date(t.timestamp||0);
+      const dStr = d.toLocaleDateString('en-GB',{month:'short',day:'numeric'})+' · '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+      const win  = (t.pnl||0) >= 0;
+      return `<div class="rec-item">
+        <div><div class="ri-dir ${t.dir==='BUY'?'buy':'sell'}">${t.dir||'BUY'}</div><div class="ri-pair">${t.symbol||'XAU/USD'}</div><div class="ri-date">${dStr}</div></div>
+        <div style="text-align:right"><div class="ri-pnl ${win?'up':'dn'}">${fmtPnl(t.pnl||0)}</div><div class="ri-lot">${t.amount?'$'+Number(t.amount).toFixed(2):''}</div></div>
+      </div>`;
+    }).join('');
+  }
+
+  // TX list
+  const tl = document.getElementById('txList');
+  if (tl) {
+    tl.innerHTML = sorted.slice(0,20).map(t => {
+      const d = new Date(t.timestamp||0);
+      const dStr = d.toLocaleDateString('en-GB',{month:'short',day:'numeric'})+' · '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+      const win  = (t.pnl||0) >= 0;
+      return `<div class="tx-item">
+        <div class="tx-l"><div class="tx-ico" style="background:rgba(${win?'46,204,113':'255,71,87'},.1)">${win?'📈':'📉'}</div>
+        <div><div class="tx-name">${t.dir||'BUY'} ${t.symbol||'XAU/USD'}</div><div class="tx-date">${dStr}</div></div></div>
+        <div class="tx-amt ${win?'up':'dn'}">${fmtPnl(t.pnl||0)}</div>
+      </div>`;
+    }).join('');
+  }
+}
+
+// ========== AUTH FUNCTIONS ==========
+function showAuthTab(tab) {
+  // Update tab active states
+  const tabSignIn   = document.getElementById('tabSignIn');
+  const tabRegister = document.getElementById('tabRegister');
+  if (tabSignIn)   tabSignIn.classList.toggle('active',   tab==='login');
+  if (tabRegister) tabRegister.classList.toggle('active', tab==='register');
+  // Show/hide panels
+  const lf = document.getElementById('loginForm');
+  const rf = document.getElementById('registerForm');
+  if (lf) lf.style.display    = tab==='login'    ? '' : 'none';
+  if (rf) rf.style.display    = tab==='register' ? '' : 'none';
+  const re = document.getElementById('regErr');
+  if (re) re.textContent = '';
+}
+
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass  = document.getElementById('loginPass').value;
+  const errEl = document.getElementById('loginErr');
+  errEl.textContent = '';
+  if (!email || !pass) { errEl.textContent = '⚠️ Please fill in all fields.'; return; }
+  if (!auth) { errEl.textContent = '⚠️ Network error. Please check connection.'; return; }
+  try {
+    await auth.signInWithEmailAndPassword(email, pass);
+  } catch(e) {
+    const msgs = {
+      'auth/user-not-found':'❌ Account not found.',
+      'auth/wrong-password':'❌ Incorrect password.',
+      'auth/invalid-credential':'❌ Email or password incorrect.',
+      'auth/invalid-email':'❌ Invalid email format.',
+      'auth/too-many-requests':'⚠️ Too many attempts. Try again later.',
+    };
+    errEl.textContent = msgs[e.code] || '❌ ' + e.message;
+  }
+}
+
+async function doRegister() {
+  const name    = document.getElementById('regName').value.trim();
+  const uname   = document.getElementById('regUser').value.trim();
+  const contact = document.getElementById('regContact').value.trim();
+  const pass    = document.getElementById('regPass').value;
+  const conf    = document.getElementById('regConf').value;
+  const errEl   = document.getElementById('regErr');
+  errEl.textContent = '';
+  if (!name||!uname||!contact||!pass||!conf) { errEl.textContent='⚠️ All fields are required.'; return; }
+  if (pass.length < 8) { errEl.textContent='⚠️ Password must be at least 8 characters.'; return; }
+  if (pass !== conf) { errEl.textContent='❌ Passwords do not match.'; return; }
+  if (!auth) { errEl.textContent='⚠️ Network error. Please check connection.'; return; }
+  const email = contact.includes('@') ? contact : contact.replace(/\+/g,'') + '@comex.trade.user';
+  try {
+    const cred = await auth.createUserWithEmailAndPassword(email, pass);
+    const uid  = cred.user.uid;
+    await db.collection('users').doc(uid).set({
+      realName: name,
+      username: uname,
+      contact: contact,
+      email: email,
+      status: 'pending',
+      is_approved: false,
+      level: 'standard',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      balance: { usd: 0, wg: 0, mmk: 0 },
+      trade_history: [],
+      kyc_verified: false,
+    });
+    document.getElementById('pendingBox').style.display = 'block';
+    errEl.style.color = '#f0c040';
+    errEl.textContent = '✅ Account created! Awaiting admin approval.';
+    await auth.signOut();
+  } catch(e) {
+    const msgs = {
+      'auth/email-already-in-use':'❌ Contact already registered.',
+      'auth/invalid-email':'❌ Invalid email format.',
+      'auth/weak-password':'⚠️ Password too weak.',
+    };
+    errEl.textContent = msgs[e.code] || '❌ ' + e.message;
+  }
+}
+
+async function doSignOut() {
+  if (auth) await auth.signOut();
+  document.getElementById('mainApp').style.display  = 'none';
+  document.getElementById('authScreen').style.display = 'flex';
+  showAuthTab('register');
+}
+
+// ========== DEPOSIT SYSTEM ==========
+function openDepositModal() {
+  if (!currentUser) return;
+  // KYC gate
+  if (!currentUser.kyc_verified) {
+    openKYCModal();
+    return;
+  }
+  const modal = document.getElementById('depositRequestModal');
+  if (modal) { modal.style.display='flex'; return; }
+  // Create deposit modal on the fly if not in DOM
+  const bg = document.createElement('div');
+  bg.id = 'depositRequestModal';
+  bg.style.cssText = 'position:fixed;inset:0;z-index:5000;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;padding:16px';
+  bg.innerHTML = `
+    <div style="background:var(--card);border:1px solid rgba(212,175,55,.3);border-radius:20px;padding:24px;width:100%;max-width:340px">
+      <div style="font-size:16px;font-weight:700;color:var(--gold2);margin-bottom:16px">📥 Deposit Request</div>
+      <div style="font-size:11px;color:var(--subtext);margin-bottom:8px;text-transform:uppercase;letter-spacing:.08em">Amount (USD)</div>
+      <input id="depAmountInp" type="number" min="1" placeholder="Enter amount..."
+        style="width:100%;padding:12px;background:rgba(255,255,255,.06);border:1px solid rgba(212,175,55,.3);border-radius:12px;font-size:16px;color:var(--text);outline:none;margin-bottom:12px">
+      <div style="font-size:11px;color:var(--subtext);margin-bottom:8px;text-transform:uppercase;letter-spacing:.08em">Note (optional)</div>
+      <input id="depNoteInp" type="text" placeholder="Payment method, ref..."
+        style="width:100%;padding:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;font-size:13px;color:var(--text);outline:none;margin-bottom:16px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <button onclick="document.getElementById('depositRequestModal').style.display='none'"
+          style="padding:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;color:var(--text);font-weight:600;cursor:pointer">Cancel</button>
+        <button onclick="submitDepositRequest()"
+          style="padding:12px;background:linear-gradient(135deg,#c9982e,#f0c040);border:none;border-radius:12px;color:#000;font-weight:700;cursor:pointer">Submit</button>
+      </div>
+      <div id="depReqErr" style="font-size:12px;color:#ff4757;margin-top:8px;min-height:16px"></div>
+    </div>`;
+  document.body.appendChild(bg);
+}
+
+async function submitDepositRequest() {
+  if (!currentUser) return;
+  const amtEl  = document.getElementById('depAmountInp');
+  const noteEl = document.getElementById('depNoteInp');
+  const errEl  = document.getElementById('depReqErr');
+  const amt    = parseFloat(amtEl.value);
+  if (!amt || amt <= 0) { errEl.textContent = '⚠️ Please enter a valid amount.'; return; }
+  try {
+    await db.collection('deposits').add({
+      userId:    currentUser.uid,
+      realName:  currentUser.realName  || '',
+      username:  currentUser.username  || '',
+      amount:    amt,
+      currency:  'USD',
+      note:      noteEl.value.trim(),
+      status:    'pending',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    document.getElementById('depositRequestModal').style.display = 'none';
+    showToast('✅ Deposit request submitted! Admin will review shortly.');
+  } catch(e) {
+    errEl.textContent = '❌ ' + e.message;
+  }
+}
+
+// ========== WITHDRAW SYSTEM ==========
+function openWithdrawModal() {
+  if (!currentUser) return;
+  const bg = document.createElement('div');
+  bg.id = 'withdrawRequestModal';
+  // Remove old if exists
+  const old = document.getElementById('withdrawRequestModal');
+  if (old) old.remove();
+  bg.style.cssText = 'position:fixed;inset:0;z-index:5000;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;padding:16px';
+  bg.innerHTML = `
+    <div style="background:var(--card);border:1px solid rgba(212,175,55,.3);border-radius:20px;padding:24px;width:100%;max-width:340px">
+      <div style="font-size:16px;font-weight:700;color:var(--gold2);margin-bottom:4px">📤 Withdraw Request</div>
+      <div style="font-size:11px;color:var(--subtext);margin-bottom:16px">Balance: $${Number(currentUser.balance?.usd||0).toFixed(2)}</div>
+      <div style="font-size:11px;color:var(--subtext);margin-bottom:8px;text-transform:uppercase;letter-spacing:.08em">Amount (USD)</div>
+      <input id="wdAmountInp" type="number" min="1" placeholder="Enter amount..."
+        style="width:100%;padding:12px;background:rgba(255,255,255,.06);border:1px solid rgba(212,175,55,.3);border-radius:12px;font-size:16px;color:var(--text);outline:none;margin-bottom:12px">
+      <div style="font-size:11px;color:var(--subtext);margin-bottom:8px;text-transform:uppercase;letter-spacing:.08em">Account / Bank Info</div>
+      <input id="wdAccInp" type="text" placeholder="Bank, account number..."
+        style="width:100%;padding:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;font-size:13px;color:var(--text);outline:none;margin-bottom:16px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <button onclick="document.getElementById('withdrawRequestModal').remove()"
+          style="padding:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;color:var(--text);font-weight:600;cursor:pointer">Cancel</button>
+        <button onclick="submitWithdrawRequest()"
+          style="padding:12px;background:linear-gradient(135deg,#c9982e,#f0c040);border:none;border-radius:12px;color:#000;font-weight:700;cursor:pointer">Submit</button>
+      </div>
+      <div id="wdReqErr" style="font-size:12px;color:#ff4757;margin-top:8px;min-height:16px"></div>
+    </div>`;
+  document.body.appendChild(bg);
+}
+
+async function submitWithdrawRequest() {
+  if (!currentUser) return;
+  const amtEl = document.getElementById('wdAmountInp');
+  const accEl = document.getElementById('wdAccInp');
+  const errEl = document.getElementById('wdReqErr');
+  const amt   = parseFloat(amtEl.value);
+  const bal   = Number(currentUser.balance?.usd || 0);
+  if (!amt || amt <= 0)  { errEl.textContent = '⚠️ Enter a valid amount.'; return; }
+  if (amt > bal)          { errEl.textContent = '❌ Insufficient balance.'; return; }
+  if (!accEl.value.trim()){ errEl.textContent = '⚠️ Please enter account info.'; return; }
+  try {
+    await db.collection('withdrawals').add({
+      userId:      currentUser.uid,
+      realName:    currentUser.realName  || '',
+      username:    currentUser.username  || '',
+      amount:      amt,
+      accountInfo: accEl.value.trim(),
+      status:      'pending',
+      createdAt:   firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    document.getElementById('withdrawRequestModal').remove();
+    showToast('✅ Withdrawal request submitted!');
+  } catch(e) {
+    errEl.textContent = '❌ ' + e.message;
+  }
+}
+
+// ========== KYC MODAL ==========
+function openKYCModal() {
+  const old = document.getElementById('kycModal');
+  if (old) { old.style.display='flex'; return; }
+  const bg = document.createElement('div');
+  bg.id = 'kycModal';
+  bg.style.cssText = 'position:fixed;inset:0;z-index:5000;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto';
+  bg.innerHTML = `
+    <div style="background:var(--card);border:1px solid rgba(212,175,55,.3);border-radius:20px;padding:24px;width:100%;max-width:360px">
+      <div style="font-size:16px;font-weight:700;color:var(--gold2);margin-bottom:4px">🪪 KYC Verification</div>
+      <div style="font-size:12px;color:var(--subtext);margin-bottom:20px">Required before first deposit</div>
+      <div style="font-size:11px;color:var(--subtext);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Real Full Name</div>
+      <input id="kycName" type="text" placeholder="As on your ID"
+        style="width:100%;padding:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;font-size:13px;color:var(--text);outline:none;margin-bottom:12px">
+      <div style="font-size:11px;color:var(--subtext);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Date of Birth</div>
+      <input id="kycBday" type="date"
+        style="width:100%;padding:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;font-size:13px;color:var(--text);outline:none;margin-bottom:12px">
+      <div style="font-size:11px;color:var(--subtext);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Phone Number</div>
+      <input id="kycPhone" type="tel" placeholder="+95 9..."
+        style="width:100%;padding:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;font-size:13px;color:var(--text);outline:none;margin-bottom:12px">
+      <div style="font-size:11px;color:var(--subtext);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">ID / Passport Number</div>
+      <input id="kycId" type="text" placeholder="National ID or Passport"
+        style="width:100%;padding:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;font-size:13px;color:var(--text);outline:none;margin-bottom:16px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <button onclick="document.getElementById('kycModal').style.display='none'"
+          style="padding:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;color:var(--text);font-weight:600;cursor:pointer">Cancel</button>
+        <button onclick="submitKYC()"
+          style="padding:12px;background:linear-gradient(135deg,#c9982e,#f0c040);border:none;border-radius:12px;color:#000;font-weight:700;cursor:pointer">Submit KYC</button>
+      </div>
+      <div id="kycErr" style="font-size:12px;color:#ff4757;margin-top:8px;min-height:16px"></div>
+    </div>`;
+  document.body.appendChild(bg);
+}
+
+async function submitKYC() {
+  if (!currentUser) return;
+  const name  = document.getElementById('kycName').value.trim();
+  const bday  = document.getElementById('kycBday').value;
+  const phone = document.getElementById('kycPhone').value.trim();
+  const idNo  = document.getElementById('kycId').value.trim();
+  const errEl = document.getElementById('kycErr');
+  if (!name||!bday||!phone||!idNo) { errEl.textContent='⚠️ All fields required.'; return; }
+  try {
+    await db.collection('users').doc(currentUser.uid).update({
+      kyc_verified: true,
+      kyc: { realName: name, birthday: bday, phone, idNumber: idNo, submittedAt: new Date().toISOString() },
+    });
+    currentUser.kyc_verified = true;
+    document.getElementById('kycModal').style.display = 'none';
+    showToast('✅ KYC submitted! You can now deposit.');
+    // Proceed to deposit
+    setTimeout(openDepositModal, 400);
+  } catch(e) { errEl.textContent = '❌ ' + e.message; }
+}
+
+// ========== TAB SWITCHING ==========
+function switchTab(el) {
+  if (el.classList.contains('active')) return;
+  document.querySelectorAll('.nav-item').forEach(i => {
+    i.classList.remove('active');
+    const s = i.querySelector('.shimmer');
+    if (s) { s.style.animation='none'; s.offsetHeight; s.style.animation=''; }
+  });
+  el.classList.add('active');
+  const s = el.querySelector('.shimmer');
+  if (s) { s.style.animation='none'; s.offsetHeight; s.style.animation=''; }
+  const tab = el.dataset.tab;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const pg = document.getElementById('page-'+tab);
+  if (pg) pg.classList.add('active');
+  if (tab === 'trade' && !tradeChartReady) initTradeChart('OANDA:XAUUSD');
+}
+
+// ========== TRADING ==========
+let selectedSec = 30, selectedPct = 15, countdown = null;
+let tradeInProgress = false;
+
+function selectTimer(el, sec, pct, range) {
+  document.querySelectorAll('.timer-opt').forEach(t => t.classList.remove('sel'));
+  el.classList.add('sel');
+  selectedSec = sec; selectedPct = pct;
+  document.getElementById('timerDisp').textContent  = sec + 's';
+  document.getElementById('profitDisp').textContent = '+' + pct + '%';
+  document.getElementById('countdownDisp').textContent = '--';
+  if (countdown) clearInterval(countdown);
+}
+
+function startTrade() { executeTrade('BUY'); }
+
+function executeTrade(dir) {
+  if (!currentUser) { showToast('Please login first.'); return; }
+  if (tradeInProgress) { showToast('Trade already in progress.'); return; }
+
+  const amtEl   = document.getElementById('tradeAmount');
+  const amount  = parseFloat(amtEl ? amtEl.value : 0);
+  if (!amount || amount <= 0) { showToast('⚠️ Enter a valid amount.'); return; }
+  const balance = Number(currentUser.balance?.usd || 0);
+  if (amount > balance) { showToast('❌ Insufficient balance.'); return; }
+
+  tradeInProgress = true;
+  if (countdown) { clearInterval(countdown); countdown = null; }
+  let rem = selectedSec;
+  const el = document.getElementById('countdownDisp');
+  el.style.color = dir === 'BUY' ? 'var(--up)' : 'var(--dn)';
+  el.textContent = rem + 's';
+
+  countdown = setInterval(async () => {
+    rem--;
+    el.textContent = rem > 0 ? rem + 's' : '⏳';
+    if (rem <= 0) {
+      clearInterval(countdown); countdown = null;
+      // Determine result (55% win)
+      const win    = Math.random() < 0.55;
+      const profit = amount * (selectedPct / 100);
+      const pnl    = win ? profit : -amount;
+      el.textContent  = win ? '✅ +' + selectedPct + '%' : '❌ Loss';
+      el.style.color  = win ? 'var(--up)' : 'var(--dn)';
+      await settleTradeFirestore(dir, amount, pnl, win);
+      tradeInProgress = false;
+    }
+  }, 1000);
+}
+
+async function settleTradeFirestore(dir, amount, pnl, win) {
+  if (!currentUser) return;
+  const uid      = currentUser.uid;
+  const symbol   = document.getElementById('activeSym')?.textContent || 'XAU/USD';
+  const newBal   = Math.max(0, Number(currentUser.balance?.usd || 0) + pnl);
+  const tradeEntry = {
+    dir, symbol, amount, pnl,
+    win, profitPct: selectedPct, durationSec: selectedSec,
+    timestamp: Date.now(),
+  };
+  try {
+    await db.collection('users').doc(uid).update({
+      'balance.usd':  newBal,
+      trade_history:  firebase.firestore.FieldValue.arrayUnion(tradeEntry),
+    });
+    // Show result modal
+    showTradeResultModal(dir, amount, pnl, win, symbol);
+  } catch(e) {
+    console.error('Trade settle error:', e.message);
+    showToast('❌ Error saving trade: ' + e.message);
+  }
+}
+
+function showTradeResultModal(dir, amount, pnl, win, symbol) {
+  const modal = document.getElementById('tradeResultModal');
+  if (!modal) return;
+  const name = currentUser?.realName || 'Trader';
+  document.getElementById('resUser').textContent   = name;
+  document.getElementById('resTime').textContent   = selectedSec + 's';
+  document.getElementById('resAmount').textContent = '$' + amount.toFixed(2);
+  if (win) {
+    document.getElementById('resProfit').textContent = '+$' + (amount * selectedPct / 100).toFixed(2);
+    document.getElementById('resProfit').style.color = '#00ff00';
+    document.getElementById('resTotal').textContent  = '$' + (Number(currentUser?.balance?.usd||0)).toFixed(2);
+  } else {
+    document.getElementById('resProfit').textContent = '-$' + amount.toFixed(2) + ' (Loss)';
+    document.getElementById('resProfit').style.color = '#ff4757';
+    document.getElementById('resTotal').textContent  = '$' + (Number(currentUser?.balance?.usd||0)).toFixed(2);
+  }
+  modal.style.display = 'flex';
+}
+
+function closeTradeModal() {
+  const modal = document.getElementById('tradeResultModal');
+  if (modal) modal.style.display = 'none';
+  const inp = document.getElementById('tradeAmount');
+  if (inp) inp.value = '';
+}
+
+// ========== LIVE CHAT ==========
+function startChatListener(uid) {
+  if (chatUnsubscribe) chatUnsubscribe();
+  chatUnsubscribe = db.collection('chats').doc(uid).collection('messages')
+    .orderBy('timestamp', 'asc')
+    .onSnapshot(snap => {
+      snap.docChanges().forEach(change => {
+        if (change.type === 'added') {
+          const msg = change.doc.data();
+          appendChatMsg(msg.text, msg.sender);
+        }
+      });
+    }, e => console.warn('Chat listener:', e.message));
+}
+
+function appendChatMsg(text, sender) {
+  const msgs = document.getElementById('chatMsgs');
+  if (!msgs) return;
+  const div = document.createElement('div');
+  if (sender === 'admin') {
+    div.className = 'msg-row';
+    div.innerHTML = '<img class="msg-av" src="' + IMGS.PROFILE + '"><div class="msg-bub"><p>' + escapeHtml(text) + '</p><div class="msg-t">Admin</div></div>';
+  } else {
+    div.style.cssText = 'display:flex;justify-content:flex-end;margin-bottom:8px;';
+    div.innerHTML = '<div style="background:rgba(212,175,55,.15);border:1px solid rgba(212,175,55,.25);border-radius:14px 4px 14px 14px;padding:9px 12px;max-width:75%;font-size:12.5px;color:var(--text)">' + escapeHtml(text) + '</div>';
+  }
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function openChat() {
+  const o = document.getElementById('chatOverlay');
+  if (o) o.style.display = 'flex';
+  // Scroll to bottom
+  setTimeout(() => {
+    const msgs = document.getElementById('chatMsgs');
+    if (msgs) msgs.scrollTop = msgs.scrollHeight;
+  }, 100);
+}
+function closeChat() { const o=document.getElementById('chatOverlay'); if(o) o.style.display='none'; }
+function closeChatOut(e) { if(e.target===document.getElementById('chatOverlay')) closeChat(); }
+
+async function sendMsg() {
+  if (!currentUser) return;
+  const inp = document.getElementById('chatInp');
+  const txt = inp.textContent.trim();
+  if (!txt || txt === 'Message...') return;
+  inp.textContent = '';
+  try {
+    await db.collection('chats').doc(currentUser.uid).collection('messages').add({
+      text:      txt,
+      sender:    'user',
+      userId:    currentUser.uid,
+      userName:  currentUser.realName || currentUser.username || 'User',
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    // Ensure chat metadata doc exists for admin
+    await db.collection('chats').doc(currentUser.uid).set({
+      userId:    currentUser.uid,
+      userName:  currentUser.realName || currentUser.username || 'User',
+      lastMsg:   txt,
+      lastMsgAt: firebase.firestore.FieldValue.serverTimestamp(),
+      unreadAdmin: firebase.firestore.FieldValue.increment(1),
+    }, { merge: true });
+  } catch(e) {
+    console.error('sendMsg:', e.message);
+  }
+}
+
+// ========== WALLET BUTTON WIRING ==========
+window.addEventListener('DOMContentLoaded', () => {
+  assignImages();
+  // Wire deposit/withdraw buttons
+  const waButtons = document.querySelectorAll('.wa-btn');
+  if (waButtons.length >= 1) {
+    waButtons[0].onclick = openDepositModal;
+  }
+  if (waButtons.length >= 2) {
+    waButtons[1].onclick = openWithdrawModal;
+  }
+  // Also wire KYC item in profile menu
+  document.querySelectorAll('.pm-item').forEach(item => {
+    if (item.textContent.includes('KYC')) {
+      item.onclick = openKYCModal;
+    }
+  });
+});
+
+// ========== SHOP TABS ==========
+function switchShop(idx, el) {
+  document.querySelectorAll('.shop-tab-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.shop-card').forEach((c,i) => c.classList.toggle('active', i===idx));
+}
+
+// ========== THEME ==========
+let isDark = true;
+function toggleTheme() {
+  isDark = !isDark;
+  document.body.classList.toggle('light', !isDark);
+  document.getElementById('themeToggle').classList.toggle('on', isDark);
+}
+
+// ========== LANGUAGE ==========
+const TRANS = {
+  mm: { home:'ပင်မ', trade:'ကုန်သွယ်', wallet:'ပိုက်ဆံ', record:'မှတ်တမ်း', me:'ကျွန်ုပ်' },
+  en: { home:'Home', trade:'Trade', wallet:'Wallet', record:'Record', me:'Me' },
+  ja: { home:'ホーム', trade:'取引', wallet:'財布', record:'記録', me:'マイページ' },
+  th: { home:'หน้าหลัก', trade:'เทรด', wallet:'กระเป๋า', record:'บันทึก', me:'โปรไฟล์' },
+  ko: { home:'홈', trade:'거래', wallet:'지갑', record:'기록', me:'내 계정' },
+};
+let curLang = 'mm';
+function openLang()  { const o=document.getElementById('langOverlay'); if(o) o.style.display='flex'; }
+function closeLang() { const o=document.getElementById('langOverlay'); if(o) o.style.display='none'; }
+function closeLangOut(e) { if(e.target===document.getElementById('langOverlay')) closeLang(); }
+function setLang(code, flag, name, nativeName) {
+  document.querySelectorAll('.lang-chk').forEach(c => c.classList.remove('show'));
+  const chk = document.getElementById('lc-'+code);
+  if (chk) chk.classList.add('show');
+  curLang = code;
+  const pmSub = document.getElementById('pmLangSub');
+  if (pmSub) pmSub.textContent = flag + ' ' + nativeName;
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    if (TRANS[code] && TRANS[code][key]) el.textContent = TRANS[code][key];
+  });
+  setTimeout(closeLang, 300);
+}
+
+// ========== NOTIFICATIONS ==========
+function openNotif() { const o=document.getElementById('notifOverlay'); if(o) o.style.display='flex'; }
+function closeNotifOut(e) { if(e.target===document.getElementById('notifOverlay')) e.target.style.display='none'; }
+
+// ========== PROFILE PHOTO ==========
+function changePhoto(input) {
+  if (!input.files || !input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const src = e.target.result;
+    ['profAvatar','csAv','csAv2'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.src = src;
+    });
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+// ========== CLOCK ==========
+function startClock() {
+  const el = document.getElementById('stTime');
+  function tick() {
+    if (!el) return;
+    const now = new Date();
+    el.textContent = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+  }
+  tick();
+  setInterval(tick, 10000);
+}
+
+// ========== TRADINGVIEW CHARTS ==========
+let homeChartReady = false, tradeChartReady = false;
+let tradeWidget = null;
+
+function initCharts() {
+  setTimeout(() => {
+    try {
+      const loading = document.getElementById('tv-home-loading');
+      if (typeof TradingView !== 'undefined') {
+        new TradingView.widget({
+          container_id: 'tv_home',
+          autosize: false,
+          width: "100%",
+          height: 800,
+          symbol: 'OANDA:XAUUSD',
+          interval: '5',
+          timezone: 'Asia/Yangon',
+          theme: document.body.classList.contains('light') ? 'light' : 'dark',
+          style: '1',
+          locale: 'en',
+          toolbar_bg: '#13131a',
+          hide_top_toolbar: false,
+          hide_legend: false,
+          save_image: false,
+          enable_publishing: false,
+        });
+        if (loading) loading.style.display = 'none';
+        homeChartReady = true;
+      }
+    } catch(e) { console.warn('TV home chart:', e.message); }
+  }, 800);
+}
+
+function initTradeChart(symbol) {
+  const loading = document.getElementById('tv-trade-loading');
+  try {
+    if (typeof TradingView !== 'undefined') {
+      document.getElementById('tv_trade').innerHTML = '';
+      tradeWidget = new TradingView.widget({
+        container_id: 'tv_trade',
+        autosize: true,
+        symbol: symbol,
+        interval: '1',
+        timezone: 'Asia/Yangon',
+        theme: document.body.classList.contains('light') ? 'light' : 'dark',
+        style: '1',
+        locale: 'en',
+        toolbar_bg: '#13131a',
+        hide_top_toolbar: false,
+        hide_legend: false,
+        save_image: false,
+        enable_publishing: false,
+      });
+      if (loading) loading.style.display = 'none';
+      tradeChartReady = true;
+    }
+  } catch(e) { console.warn('TV trade chart:', e.message); if (loading) loading.style.display = 'none'; }
+}
+
+function switchMarket(symbol, label, el) {
+  document.querySelectorAll('.mkt-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('activeSym').textContent = label;
+  tradeChartReady = false;
+  initTradeChart(symbol);
+}
+
+// ========== HELPERS ==========
+function escapeHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.85);color:#fff;padding:10px 20px;border-radius:12px;font-size:13px;z-index:9999;white-space:nowrap;border:1px solid rgba(212,175,55,.3)';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+function showAbout() {
+  const ab = document.querySelector('.about-box');
+  alert(ab ? ab.innerText : 'COMEX GOLD TRADE — Myanmar Premier Trading Platform');
+}
+</script>
+
+<!-- Trade Result Modal (single copy) -->
+<div id="tradeResultModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:6000;align-items:center;justify-content:center;">
+  <div style="background:#252525;width:85%;max-width:350px;padding:25px;border-radius:15px;border:1px solid #FFD700;text-align:center;box-shadow:0 0 20px rgba(255,215,0,0.3);">
+    <h2 style="color:#FFD700;margin-bottom:20px">RESULT</h2>
+    <div style="text-align:left;color:#ddd;line-height:1.8;font-size:14px;">
+      <p>Trader: <span id="resUser" style="float:right;color:white;font-weight:bold">...</span></p>
+      <p>Time: <span id="resTime" style="float:right;color:white">...</span></p>
+      <p>Amount: <span id="resAmount" style="float:right;color:white">...</span></p>
+      <p>P&amp;L: <span id="resProfit" style="float:right">...</span></p>
+      <hr style="border-color:#444;margin:10px 0">
+      <p style="font-size:16px;font-weight:bold">Balance: <span id="resTotal" style="float:right;color:#FFD700">...</span></p>
+    </div>
+    <button onclick="closeTradeModal()" style="margin-top:20px;width:100%;padding:12px;background:#FFD700;color:black;border:none;border-radius:8px;font-weight:bold;font-size:16px;">
+      Collect
+    </button>
+  </div>
+</div>
+
+</body>
+</html>
